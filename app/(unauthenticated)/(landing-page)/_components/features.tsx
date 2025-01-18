@@ -38,7 +38,7 @@ const FeatureAnimation1 = () => {
         />
 
         <div className="w-full bg-gradient-to-r from-neutral-200 to-neutral-300 dark:from-neutral-900 dark:to-neutral-800 h-10  rounded-full px-5 flex items-center text-left ">
-          The best stories are the ones you're willing to die for... or maybe
+          The best stories are the ones you&apos;re willing to die for... or maybe
           live for.
         </div>
       </div>
