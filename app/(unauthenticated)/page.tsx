@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 
 import { Hero } from "./(landing-page)/_components/hero";
@@ -27,10 +26,9 @@ export default function Home() {
 
     fetchData();
   }, []);
-  console.log("Data:", data);
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -38,9 +36,7 @@ export default function Home() {
       >
         <Hero />
       </motion.div>
-      {/* About Section */}
 
-      {/* Features Section */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -49,7 +45,6 @@ export default function Home() {
         <Features />
       </motion.div>
 
-      {/* How It Works Section */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -58,7 +53,6 @@ export default function Home() {
         <HowItWorks />
       </motion.div>
 
-      {/* Anime Recommendation Flow Section */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -67,7 +61,6 @@ export default function Home() {
         <AnimeRecommendationFlow />
       </motion.div>
 
-      {/* Newsletter Section */}
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -75,7 +68,6 @@ export default function Home() {
       >
         <Newsletter />
       </motion.div>
-
     </div>
   );
 }

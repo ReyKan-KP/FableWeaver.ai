@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { ProfileForm } from "@/components/profile-form";
+import { ProfileForm } from "@/app/(authenticated)/profile/_components/profile-form";
 import {
   Card,
   CardContent,

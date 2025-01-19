@@ -8,7 +8,6 @@ import ReactFlow, {
   addEdge,
   Background,
   Controls,
-  MiniMap,
   NodeTypes,
   NodeProps,
   Handle,
@@ -318,7 +317,7 @@ function AnimeRecommendationFlow() {
 
   return (
     <ReactFlowProvider>
-      <div style={{ width: "100%", height: "600px" }}>
+      <div className="w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px]">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -334,18 +333,22 @@ function AnimeRecommendationFlow() {
           panOnScroll={false}
           panOnScrollSpeed={0.5}
         >
-          {/* <Controls /> */}
-          {/* <MiniMap /> */}
           <Background gap={12} size={1} />
         </ReactFlow>
       </div>
     </ReactFlowProvider>
   );
 }
+
 export default function FlowWithProvider() {
   return (
-    <ReactFlowProvider>
-      <AnimeRecommendationFlow />
-    </ReactFlowProvider>
+    <div className="py-12 sm:py-24 px-4 sm:px-6 lg:px-8">
+      <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 sm:mb-12 text-center">
+        Flow
+      </h2>
+      <ReactFlowProvider>
+        <AnimeRecommendationFlow />
+      </ReactFlowProvider>
+    </div>
   );
 }
