@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import AuthProvider from "@/components/providers/session-provider";
 import "./globals.css";
 import Footer from "@/components/footer";
+import { Analytics } from "@vercel/analytics/react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -33,6 +34,7 @@ export default async function RootLayout({
               {children}
             </main>
             <Footer />
+            <Analytics />
           </ThemeProvider>
         </AuthProvider>
       </body>
