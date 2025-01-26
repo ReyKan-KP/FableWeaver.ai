@@ -9,6 +9,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Info, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ChatSessionResponse {
   session_id: string;
@@ -101,11 +108,15 @@ export default function CharacterChatPage() {
 
   if (isLoading || !character || !sessionId) {
     return (
-      <div className="flex justify-center items-center min-h-screen dark:bg-gray-900">
-        <div className="relative w-12 h-12">
-          <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-200 dark:border-blue-800 rounded-full animate-ping"></div>
-          <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-500 dark:border-blue-400 rounded-full animate-pulse"></div>
+      <div className="max-w-5xl mx-auto p-4 py-6 min-h-screen space-y-4">
+        <div className="flex items-center space-x-4">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-[250px]" />
+            <Skeleton className="h-4 w-[200px]" />
+          </div>
         </div>
+        <Skeleton className="h-[600px] w-full rounded-xl" />
       </div>
     );
   }
@@ -120,7 +131,7 @@ export default function CharacterChatPage() {
         <div className="flex items-center gap-4">
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Link
-              href="/characters"
+              href="/character-realm"
               className="p-2 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -131,14 +142,20 @@ export default function CharacterChatPage() {
               className="w-12 h-12 rounded-full overflow-hidden"
               whileHover={{ scale: 1.1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              style={{ perspective: 1000 }}
             >
-              <Image
-                src={character.image_url || "/images/default-character.png"}
-                alt={character.name}
-                width={48}
-                height={48}
-                className="w-full h-full object-cover bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500"
-              />
+              <motion.div
+                whileHover={{ rotateY: 15, rotateX: -15 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <Image
+                  src={character.image_url || "/images/default-character.png"}
+                  alt={character.name}
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500"
+                />
+              </motion.div>
             </motion.div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
@@ -150,15 +167,24 @@ export default function CharacterChatPage() {
             </div>
           </div>
         </div>
-        <motion.button
-          onClick={() => setShowInfo(!showInfo)}
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors group"
-          aria-label="Toggle character info"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <Info className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 dark:group-hover:text-blue-400" />
-        </motion.button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                onClick={() => setShowInfo(!showInfo)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors group"
+                aria-label="Toggle character info"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Info className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 dark:group-hover:text-blue-400" />
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{showInfo ? "Hide" : "Show"} character info</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </motion.div>
 
       <AnimatePresence>

@@ -31,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CharactersPage() {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -49,6 +50,7 @@ export default function CharactersPage() {
   const { data: session, status } = useSession();
   const user = session?.user;
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchCharacters = async () => {
@@ -122,12 +124,20 @@ export default function CharactersPage() {
       });
       if (response.ok) {
         setCharacters(characters.filter((c) => c.id !== characterToDelete.id));
+        toast({
+          title: "Character deleted",
+          description: "The character has been successfully deleted.",
+        });
       } else {
         throw new Error("Failed to delete character");
       }
     } catch (error) {
       console.error("Error deleting character:", error);
-      alert("Failed to delete character. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to delete character. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsDeleteDialogOpen(false);
       setCharacterToDelete(null);
@@ -155,7 +165,7 @@ export default function CharactersPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
-              Characters Gallery
+              Character Realm
             </h1>
             <p className="text-gray-600 dark:text-gray-300 mt-2">
               Discover and interact with unique characters
@@ -169,7 +179,7 @@ export default function CharactersPage() {
                   hover:shadow-lg transform transition-all duration-300 font-semibold flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  Create New Character
+                  Weave New Character
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -426,6 +436,7 @@ const CreateCharacterForm = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const user = session?.user;
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     character_name: "",
     character_description: "",
@@ -509,7 +520,11 @@ const CreateCharacterForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      alert("Please sign in to create a character");
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to create a character",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -561,11 +576,21 @@ const CreateCharacterForm = ({
       }
 
       if (data.id) {
+        toast({
+          title: initialData ? "Character updated" : "Character created",
+          description: initialData
+            ? "Your character has been successfully updated."
+            : "Your new character has been created successfully.",
+        });
         onSuccess();
       }
     } catch (error) {
       console.error("Error saving character:", error);
-      alert("Failed to save character. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to save character. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -866,12 +891,12 @@ const CreateCharacterForm = ({
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            {initialData ? "Updating..." : "Creating..."}
+            {initialData ? "Refining..." : "Weaving..."}
           </>
         ) : (
           <>
             <Sparkles className="w-4 h-4" />
-            {initialData ? "Update Character" : "Create Character"}
+            {initialData ? "Refine Character" : "Weave Character"}
           </>
         )}
       </motion.button>

@@ -47,3 +47,33 @@ export interface ChatSessionResponse {
     error?: string
 }
 
+export interface GroupChatMessage extends Message {
+    sender_id: string
+    sender_type: 'user' | 'character'
+    sender_name: string
+}
+
+export interface GroupChat {
+    id: string
+    creator_id: string
+    users_id: string[]
+    characters_id: string[]
+    messages: GroupChatMessage[]
+    session_id: string
+    created_at: string
+    updated_at: string
+    group_name: string
+    is_active: boolean
+}
+
+export interface CreateGroupChatRequest {
+    group_name: string
+    users_id: string[]
+    characters_id: string[]
+}
+
+export interface GroupChatResponse {
+    group: GroupChat
+    error?: string
+}
+
