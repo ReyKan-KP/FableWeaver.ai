@@ -29,6 +29,7 @@ import {
   Layout,
   CreditCard,
   House,
+  MessageSquareQuote,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileMenu } from "./mobile-menu";
@@ -46,19 +47,24 @@ const navItems = [
     icon: Wand2,
   },
   {
+    title: "Characters Gallery",
+    href: "/characters",
+    icon: MessageSquareQuote,
+  },
+  {
     title: "Features",
     href: "#features",
     icon: Sparkles,
     items: [
-      { title: "AI Story Generation", href: "#ai-story", icon: Layout },
-      { title: "Character Creation", href: "#character-creation", icon: User },
-      { title: "World Building", href: "#world-building", icon: Layout },
+      { title: "AI Story Generation", href: "/ai-story", icon: Layout },
+      { title: "Character Creation", href: "/characters", icon: User },
+      // { title: "World Building", href: "#world-building", icon: Layout },
+      {
+        title: "Weaving your story Recommendation",
+        href: "/weave-anime",
+        icon: Layout,
+      },
     ],
-  },
-  {
-    title: "Pricing",
-    href: "#pricing",
-    icon: CreditCard,
   },
   {
     title: "Sign In",

@@ -29,7 +29,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <Navbar />
-            <main className="pt-16">
+            <main className="pt-28">
               <Toaster />
               {children}
             </main>

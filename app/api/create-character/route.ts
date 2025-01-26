@@ -1,20 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { NextResponse } from 'next/server';
-import * as cheerio from 'cheerio';
+import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase"; import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { GoogleGenerativeAI } from '@google/generative-ai'; import * as cheerio from 'cheerio';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const googleApiKey = process.env.GOOGLE_API_KEY!;
+const googleApiKey = process.env.GOOGLE_API_KEY!; const genAI = new GoogleGenerativeAI(googleApiKey);
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-const genAI = new GoogleGenerativeAI(googleApiKey);
+interface CharacterData { name: string; description: string; content_source: string; content_types: string[]; fandom_url: string; dialogues: string[]; is_public: boolean; creator_id: string; image_url: string | null; is_active: boolean; fandom_content?: string; personality?: string; background?: string; notable_quotes?: string; }
 
 async function scrapeFandomContent(url: string) {
     try {
-        const response = await fetch(url);
-        const html = await response.text();
-        const $ = cheerio.load(html);
+        const response = await fetch(url); const html = await response.text(); const $ = cheerio.load(html);
 
         const mainContent = $('.mw-parser-output').text().trim();
         const personalitySection = $('#Personality').parent().next('p').text().trim();
@@ -39,28 +34,77 @@ async function scrapeFandomContent(url: string) {
 
 export async function POST(request: Request) {
     try {
-        const { user_id, ...body } = await request.json();
-        const {
-            character_name,
-            character_description,
-            content_source,
-            content_types,
-            fandom_url,
-            dialogues,
-            additional_info,
-            is_public = true
-        } = body;
+        const session = await getServerSession(authOptions); if (!session?.user?.id) { return NextResponse.json({ error: "Not authenticated" }, { status: 401 }); }
 
-        let characterData: any = {
+        const formData = await request.formData();
+        const supabase = createServerSupabaseClient();
+
+        // Handle image upload
+        let characterImageUrl = null;
+        const characterImage = formData.get("character_image");
+        const removeImage = formData.get("removeImage") === "true";
+
+        if (characterImage && characterImage instanceof Blob) {
+            if (!characterImage.type.startsWith("image/")) {
+                return NextResponse.json(
+                    { error: "File must be an image" },
+                    { status: 400 }
+                );
+            }
+
+            if (characterImage.size > 5 * 1024 * 1024) {
+                return NextResponse.json(
+                    { error: "File size must be less than 5MB" },
+                    { status: 400 }
+                );
+            }
+
+            // Convert the image data to a Buffer
+            const arrayBuffer = await characterImage.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            const fileExt = characterImage.type.split("/")[1];
+            const fileName = `character-${session.user.id}-${Date.now()}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from("character-images")
+                .upload(fileName, buffer, {
+                    contentType: characterImage.type,
+                    cacheControl: "3600",
+                    upsert: true,
+                });
+
+            if (uploadError) {
+                console.error("Upload error:", uploadError);
+                throw uploadError;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from("character-images")
+                .getPublicUrl(fileName);
+
+            characterImageUrl = publicUrl;
+        }
+
+        // Parse other form data
+        const character_name = formData.get("character_name") as string;
+        const character_description = formData.get("character_description") as string;
+        const content_source = formData.get("content_source") as string;
+        const content_types = JSON.parse(formData.get("content_types") as string);
+        const fandom_url = formData.get("fandom_url") as string;
+        const dialogues = JSON.parse(formData.get("dialogues") as string);
+        const is_public = formData.get("is_public") === "true";
+
+        let characterData: CharacterData = {
             name: character_name,
             description: character_description,
             content_source,
             content_types,
             fandom_url,
             dialogues,
-            additional_info: additional_info || {},
-            creator_id: user_id,
             is_public,
+            creator_id: session.user.id,
+            image_url: characterImageUrl,
             is_active: true
         };
 
@@ -83,17 +127,24 @@ export async function POST(request: Request) {
             };
         }
 
-        const { data, error } = await supabase
-            .from('character_profiles')
+        // Insert character into database
+        const { data: character, error: insertError } = await supabase
+            .from("character_profiles")
             .insert(characterData)
             .select()
             .single();
 
-        if (error) throw error;
+        if (insertError) {
+            console.error("Insert error:", insertError);
+            throw insertError;
+        }
 
-        return NextResponse.json({ id: data.id });
+        return NextResponse.json(character);
     } catch (error) {
-        console.error('Error creating character:', error);
-        return NextResponse.json({ error: 'Failed to create character' }, { status: 500 });
+        console.error("Error creating character:", error);
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : "Failed to create character" },
+            { status: 500 }
+        );
     }
 }

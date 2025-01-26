@@ -3,8 +3,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import  Chat  from "@/components/chat";
+import Chat from "@/components/chat";
 import type { Message, Character } from "@/types/chat";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Info, Sparkles } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 interface ChatSessionResponse {
   session_id: string;
@@ -29,6 +33,7 @@ export default function CharacterChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -73,33 +78,119 @@ export default function CharacterChatPage() {
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto p-4">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl mx-auto p-4"
+      >
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-6 py-4 rounded-lg shadow-sm">
+          <p className="font-medium">Error</p>
+          <p className="mt-1">{error}</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push("/characters")}
+            className="mt-4 px-4 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-full hover:bg-red-200 dark:hover:bg-red-900/70 transition-colors"
+          >
+            Return to Characters
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   if (isLoading || !character || !sessionId) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-screen dark:bg-gray-900">
+        <div className="relative w-12 h-12">
+          <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-200 dark:border-blue-800 rounded-full animate-ping"></div>
+          <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-500 dark:border-blue-400 rounded-full animate-pulse"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-4 py-24">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold">{character.name}</h1>
-        <p className="text-gray-600">{character.description}</p>
-      </div>
-      <Chat
-        characterId={characterId}
-        sessionId={sessionId}
-        initialMessages={messages}
-      />
+    <div className="max-w-5xl mx-auto p-4 py-6 min-h-screen ">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+      >
+        <div className="flex items-center gap-4">
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Link
+              href="/characters"
+              className="p-2 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+          </motion.div>
+          <div className="flex items-center gap-3">
+            <motion.div
+              className="w-12 h-12 rounded-full overflow-hidden"
+              whileHover={{ scale: 1.1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <Image
+                src={character.image_url || "/images/default-character.png"}
+                alt={character.name}
+                width={48}
+                height={48}
+                className="w-full h-full object-cover bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500"
+              />
+            </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
+                {character.name}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                From: {character.content_source}
+              </p>
+            </div>
+          </div>
+        </div>
+        <motion.button
+          onClick={() => setShowInfo(!showInfo)}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors group"
+          aria-label="Toggle character info"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <Info className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 dark:group-hover:text-blue-400" />
+        </motion.button>
+      </motion.div>
+
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-violet-500/10 via-blue-500/10 to-teal-500/10 dark:from-violet-500/5 dark:via-blue-500/5 dark:to-teal-500/5 backdrop-blur-sm rounded-lg p-4 mb-6">
+              <p className="text-gray-700 dark:text-gray-200">
+                {character.description}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <Chat
+          characterId={characterId}
+          sessionId={sessionId}
+          initialMessages={messages}
+          characterImage={character.image_url}
+        />
+      </motion.div>
     </div>
   );
 }

@@ -18,7 +18,8 @@ export async function GET() {
                 is_public,
                 is_active,
                 creator_id,
-                created_at
+                created_at,
+                image_url
             `)
             .order('created_at', { ascending: false });
 

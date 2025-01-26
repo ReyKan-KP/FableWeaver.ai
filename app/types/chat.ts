@@ -20,6 +20,7 @@ export interface Character {
     background?: string
     notable_quotes?: string
     created_at: string
+    image_url: string;
     additional_info?: Record<string, any>
 }
 
