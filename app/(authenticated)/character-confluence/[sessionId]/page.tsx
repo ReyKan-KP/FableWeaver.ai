@@ -8,14 +8,41 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, ArrowLeft, Info, Users, Sparkles } from "lucide-react";
 import type { GroupChat, GroupChatMessage } from "@/types/chat";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const supabase = createBrowserSupabaseClient();
+
+interface GroupChatPayload {
+  session_id: string;
+  messages: GroupChatMessage[];
+  group_name: string;
+  characters: { id: string; name: string; image_url: string }[];
+  [key: string]: any;
+}
+
+interface GroupInfo {
+  messages: GroupChatMessage[];
+  characters: { id: string; name: string; image_url: string }[];
+  users: {
+    user_id: string | null | undefined;
+    user_name: string;
+    image: string | null | undefined;
+  }[];
+}
+
 async function getProfileImageUrl(senderId: string): Promise<string> {
   const { data, error } = await supabase
     .from("character_profiles")
@@ -31,6 +58,24 @@ async function getProfileImageUrl(senderId: string): Promise<string> {
   return data?.image_url || "";
 }
 
+async function getUserImageUrl(senderId: string): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from("user")
+      .select("avatar_url")
+      .eq("user_id", senderId)
+      .single();
+
+    if (error || !data?.avatar_url) {
+      return "/images/default-avatar.png";
+    }
+
+    return data.avatar_url;
+  } catch {
+    return "/images/default-avatar.png";
+  }
+}
+
 export default function GroupChatSession() {
   const { sessionId } = useParams();
   const { data: session } = useSession();
@@ -44,6 +89,9 @@ export default function GroupChatSession() {
   const [characterImages, setCharacterImages] = useState<
     Record<string, string>
   >({});
+  const [userImages, setUserImages] = useState<Record<string, string>>({});
+  const [showInfo, setShowInfo] = useState(false);
+  const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -65,23 +113,61 @@ export default function GroupChatSession() {
 
     if (session?.user?.id && sessionId) {
       fetchMessages();
+
+      // Set up real-time subscription
+      const channel = supabase
+        .channel(`group_chat_${sessionId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "group_chat_history",
+            filter: `session_id=eq.${sessionId}`,
+          },
+          (payload: RealtimePostgresChangesPayload<GroupChatPayload>) => {
+            const newData = payload.new as GroupChatPayload;
+            if (
+              newData &&
+              "messages" in newData &&
+              Array.isArray(newData.messages)
+            ) {
+              setMessages(newData.messages);
+            }
+          }
+        )
+        .subscribe();
+
+      // Cleanup subscription on unmount
+      return () => {
+        channel.unsubscribe();
+      };
     }
-  }, [session?.user?.id, sessionId]);
+  }, [session?.user?.id, sessionId, toast]);
 
   useEffect(() => {
     const scrollToBottom = () => {
       if (scrollAreaRef.current) {
-        setTimeout(() => {
-          scrollAreaRef.current?.scrollTo({
-            top: scrollAreaRef.current.scrollHeight,
-            behavior: "smooth",
-          });
-        }, 100);
+        const scrollArea = scrollAreaRef.current;
+        const scrollHeight = scrollArea.scrollHeight;
+        const height = scrollArea.clientHeight;
+        const maxScroll = scrollHeight - height;
+
+        scrollArea.scrollTo({
+          top: maxScroll,
+          behavior: "smooth",
+        });
       }
     };
 
+    // Scroll immediately for initial load
     scrollToBottom();
-  }, [messages]);
+
+    // And then again after a short delay to ensure content is rendered
+    const timeoutId = setTimeout(scrollToBottom, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [messages, sending]);
 
   useEffect(() => {
     const loadCharacterImages = async () => {
@@ -100,6 +186,46 @@ export default function GroupChatSession() {
 
     loadCharacterImages();
   }, [messages]);
+
+  useEffect(() => {
+    const loadUserImages = async () => {
+      const userIds = groupInfo?.users
+        .map((u) => u.user_id)
+        .filter((id): id is string => id !== null && id !== undefined);
+
+      if (!userIds) return;
+
+      for (const id of userIds) {
+        const imageUrl = await getUserImageUrl(id);
+        console.log(imageUrl);
+        setUserImages((prev) => ({ ...prev, [id]: imageUrl }));
+      }
+    };
+
+    if (groupInfo?.users) {
+      loadUserImages();
+    }
+  }, [groupInfo?.users]);
+  console.log(userImages);
+
+  useEffect(() => {
+    const fetchGroupInfo = async () => {
+      try {
+        const res = await fetch(`/api/group-chat/${sessionId}`);
+        const data = await res.json();
+        setGroupInfo(data);
+        setMessages(data.messages || []);
+      } catch (error) {
+        console.error("Error fetching group info:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (sessionId) {
+      fetchGroupInfo();
+    }
+  }, [sessionId]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,9 +269,205 @@ export default function GroupChatSession() {
       </div>
     );
   }
-
+  console.log(groupInfo);
   return (
     <div className="container mx-auto py-8">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+      >
+        <div className="flex items-center gap-4">
+          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <Link
+              href="/character-confluence"
+              className="p-2 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+          </motion.div>
+          <div className="flex items-center gap-3">
+            {/* Combined Stack */}
+            <div className="flex -space-x-4">
+              {(() => {
+                const allParticipants = [
+                  ...(groupInfo?.characters?.map((char) => ({
+                    id: char.id,
+                    name: char.name,
+                    image:
+                      characterImages[char.id] ||
+                      "/images/default-character.png",
+                    type: "character",
+                  })) || []),
+                  ...(groupInfo?.users?.map((user) => ({
+                    id: user.user_id || "",
+                    name: user.user_name,
+                    image:
+                      userImages[user.user_id ?? ""] ||
+                      "/images/default-avatar.png",
+                    type: "user",
+                  })) || []),
+                ].sort(() => Math.random() - 0.5);
+
+                const displayParticipants = allParticipants.slice(0, 3);
+                const remainingCount = allParticipants.length - 3;
+
+                return (
+                  <>
+                    {displayParticipants.map((participant) => (
+                      <motion.div
+                        key={participant.id}
+                        className="w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-gray-800"
+                        whileHover={{ scale: 1.1, zIndex: 10 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20,
+                        }}
+                        style={{ perspective: 1000 }}
+                      >
+                        <Image
+                          src={participant.image}
+                          alt={participant.name}
+                          width={48}
+                          height={48}
+                          className={cn(
+                            "w-full h-full object-cover",
+                            participant.type === "character"
+                              ? "bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500"
+                              : "bg-gradient-to-r from-blue-500 to-purple-500"
+                          )}
+                        />
+                      </motion.div>
+                    ))}
+                    {remainingCount > 0 && (
+                      <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center border-2 border-white dark:border-gray-800">
+                        <span className="text-sm font-medium">
+                          +{remainingCount}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
+                Group Chat
+              </h1>
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm mt-1">
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  <span>{groupInfo?.users?.length || 0} Users</span>
+                </div>
+                <span>•</span>
+                <div className="flex items-center gap-1">
+                  <Sparkles className="w-4 h-4" />
+                  <span>{groupInfo?.characters?.length || 0} Characters</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                onClick={() => setShowInfo(!showInfo)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors group"
+                aria-label="Toggle group info"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Users className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 dark:group-hover:text-blue-400" />
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{showInfo ? "Hide" : "Show"} group info</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </motion.div>
+
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-gradient-to-r from-violet-500/10 via-blue-500/10 to-teal-500/10 dark:from-violet-500/5 dark:via-blue-500/5 dark:to-teal-500/5 backdrop-blur-sm rounded-lg p-4 mb-6">
+              {/* Characters Section */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Sparkles className="w-5 h-5" />
+                  Characters
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {groupInfo?.characters.map((character) => (
+                    <div
+                      key={character.id}
+                      className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 rounded-lg p-2"
+                    >
+                      <div className="w-8 h-8 rounded-full overflow-hidden">
+                        <Image
+                          src={
+                            characterImages[character.id] ||
+                            "/images/default-character.png"
+                          }
+                          alt={character.name}
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                        {character.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Users Section */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Users className="w-5 h-5" />
+                  Users
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {groupInfo?.users.map((user) => (
+                    <div
+                      key={user.user_id}
+                      className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 rounded-lg p-2"
+                    >
+                      <div className="w-8 h-8 rounded-full overflow-hidden">
+                        <Image
+                          src={
+                            userImages[user.user_id ?? ""] ||
+                            "/images/default-avatar.png"
+                          }
+                          alt={user.user_name}
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                        {user.user_name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Card className="w-full max-w-7xl mx-auto h-[80vh] bg-[#bccff1] dark:bg-zinc-900 border-none shadow-lg">
         <ScrollArea
           className="h-[73vh] px-4 py-6 dark:bg-dot-white/[0.2] bg-dot-black/[0.2]"
@@ -187,7 +509,10 @@ export default function GroupChatSession() {
                           message.sender_type === "character"
                             ? characterImages[message.sender_id] ||
                               "/images/default-character.png"
-                            : "/images/default-avatar.png"
+                            : userImages[
+                                message.sender_id ??
+                                  "/images/default-character.png"
+                              ]
                         }
                         alt={message.sender_name}
                         width={55}
@@ -236,7 +561,8 @@ export default function GroupChatSession() {
                     >
                       <Image
                         src={
-                          session?.user?.image || "/images/default-avatar.png"
+                          userImages[message.sender_id ?? ""] ||
+                          "/images/default-avatar.png"
                         }
                         alt="You"
                         width={55}

@@ -10,43 +10,45 @@ import {
 
 const HowItWorks = () => {
   const { scrollYProgress } = useScroll();
-  const opacity = useTransform(scrollYProgress, [0.2, 0.4], [0, 1]);
   const y = useTransform(scrollYProgress, [0.2, 0.4], [50, 0]);
 
   return (
     <LazyMotion features={domAnimation}>
-      <motion.section className="py-12 sm:py-24" style={{ opacity, y }}>
+      <motion.section className="py-12 sm:py-24">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="text-center mb-12 sm:mb-16 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent mb-4">
               How It Works
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300">
-              Discover your next favorite anime in three simple steps
+            <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Discover, create, and interact in your personalized fable
             </p>
           </motion.div>
+
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12 max-w-5xl mx-auto">
             {[
               {
                 step: "01",
-                title: "Describe Your Interests",
-                description: "Tell us what kind of story you're looking for",
+                title: "Discover Stories",
+                description:
+                  "Get personalized anime recommendations based on your preferences and watch history",
               },
               {
                 step: "02",
-                title: "AI Analysis",
+                title: "Create Characters",
                 description:
-                  "Our AI processes your preferences and search history",
+                  "Design unique characters or choose from our collection to bring your favorite stories to life",
               },
               {
                 step: "03",
-                title: "Get Recommendations",
-                description: "Receive personalized anime suggestions",
+                title: "Weave Your Tale",
+                description:
+                  "Engage in immersive conversations and group chats while discovering new anime adventures",
               },
             ].map((step, index) => (
               <m.div
@@ -59,7 +61,7 @@ const HowItWorks = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <m.div
-                  className="inline-block mb-4 sm:mb-6 text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-transparent bg-clip-text"
+                  className="inline-block mb-4 sm:mb-6 text-4xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 text-transparent bg-clip-text"
                   whileHover={{ scale: 1.1 }}
                   transition={{ duration: 0.3 }}
                 >

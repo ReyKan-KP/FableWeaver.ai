@@ -1,6 +1,6 @@
 export interface Message {
     timestamp: any;
-    role: "user" | "assistant";
+    role: "user" | "assistant" | "system";
     content: string;
 }
 
@@ -34,7 +34,7 @@ export interface ChatSession {
 }
 export interface GroupChatMessage extends Message {
     sender_id: string
-    sender_type: 'user' | 'character'
+    sender_type: 'user' | 'character' | 'system'
     sender_name: string
 }
 

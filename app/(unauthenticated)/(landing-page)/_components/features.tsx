@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef,useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { Bot, Brain, Zap, Sparkles, History, Palette } from "lucide-react";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
@@ -11,6 +11,7 @@ import {
   AnimatePresence,
 } from "framer-motion";
 import { cn } from "@/lib/utils";
+
 const FeatureAnimation1 = () => {
   return (
     <motion.div
@@ -20,12 +21,12 @@ const FeatureAnimation1 = () => {
       transition={{ duration: 0.5 }}
     >
       <motion.div
-        className="flex flex-row rounded-full border border-neutral-100 dark:border-white/[0.2] p-2 items-center space-x-2 ml-auto bg-[#bccff1] dark:bg-black"
+        className="flex flex-row rounded-full border border-neutral-100 dark:border-white/[0.2] p-2 items-center space-x-2 ml-auto bg-[#bccff1] dark:bg-zinc-900"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         <motion.div
-          className="w-full bg-gradient-to-r from-neutral-200 to-neutral-300 dark:from-neutral-900 dark:to-neutral-800 h-10 rounded-full px-5 flex items-center justify-end"
+          className="w-full bg-background h-10 rounded-full px-5 flex items-center justify-end"
           initial={{ width: 0 }}
           animate={{ width: "100%" }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -41,7 +42,8 @@ const FeatureAnimation1 = () => {
         />
       </motion.div>
       <motion.div
-        className="flex flex-row rounded-full border border-neutral-100 dark:border-white/[0.2] p-2 items-center space-x-2 bg-[#bccff1]  dark:bg-black"
+        className="flex flex-row rounded-full border border-neutral-100 dark:border-white/[0.2] p-2 items-center space-x-2
+        bg-[#bccff1] dark:bg-zinc-900"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
@@ -56,7 +58,7 @@ const FeatureAnimation1 = () => {
           className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500"
         />
         <motion.div
-          className="w-full bg-gradient-to-r from-neutral-200 to-neutral-300 dark:from-neutral-900 dark:to-neutral-800 h-10 rounded-full px-5 flex items-center text-left"
+          className="w-full  h-10 rounded-full bg-background px-5 flex items-center text-left"
           initial={{ width: 0 }}
           animate={{ width: "100%" }}
           transition={{ duration: 0.5, delay: 0.7 }}
@@ -150,6 +152,7 @@ const FeatureAnimation6 = () => {
     </motion.div>
   );
 };
+
 const FeatureAnimation7 = () => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
@@ -238,6 +241,7 @@ const FeatureAnimation7 = () => {
     </motion.div>
   );
 };
+
 const AnimatedTitle = ({ children }: { children: React.ReactNode }) => {
   return (
     <motion.h1
@@ -264,60 +268,53 @@ const AnimatedDescription = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const items = [
+  {
+    title: "AI Character Creation",
+    description:
+      "Create unique characters with rich personalities, backstories, and traits that come to life through advanced AI",
+    header: <FeatureAnimation1 />,
+    className: "md:col-span-2",
+    icon: <Sparkles className="h-4 w-4 text-violet-500" />,
+  },
+  {
+    title: "Smart Recommendations",
+    description:
+      "Get personalized anime suggestions based on your preferences, watch history, and story interests",
+    header: <FeatureAnimation2 />,
+    className: "md:col-span-1",
+    icon: <Brain className="h-4 w-4 text-blue-500" />,
+  },
+  {
+    title: "Character Confluence",
+    description:
+      "Experience dynamic group chats where multiple AI characters interact with each other and users naturally",
+    header: <FeatureAnimation7 />,
+    className: "md:col-span-1",
+    icon: <Palette className="h-4 w-4 text-violet-500" />,
+  },
+  {
+    title: "Story Weaving",
+    description:
+      "Discover new anime while creating immersive scenarios with your favorite characters",
+    header: <FeatureAnimation6 />,
+    className: "md:col-span-1",
+    icon: <Bot className="h-4 w-4 text-violet-500" />,
+  },
+  {
+    title: "Personalized History",
+    description:
+      "Your watch history and character interactions shape future recommendations and experiences",
+    header: <FeatureAnimation5 />,
+    className: "md:col-span-1",
+    icon: <History className="h-4 w-4 text-blue-500" />,
+  },
+];
+
 export default function FeaturesPage() {
   const controls = useAnimation();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
-
-  const items = [
-    {
-      title: "Personalized Character Chatbot",
-      description:
-        "Create your own personalized character chatbot that learns and evolves with you",
-      header: <FeatureAnimation1 />,
-      className: "md:col-span-2",
-      icon: <Sparkles className="h-4 w-4 text-violet-500" />,
-    },
-    {
-      title: "Smart Learning",
-      description:
-        "The more you interact, the better it gets at understanding your unique taste",
-      header: <FeatureAnimation2 />,
-      className: "md:col-span-1",
-      icon: <Brain className="h-4 w-4 text-blue-500" />,
-    },
-    // {
-    //   title: "Real-time Processing",
-    //   description:
-    //     "Get instant, personalized recommendations based on your current interests",
-    //   header: <FeatureAnimation7 />,
-    //   className: "md:col-span-1",
-    //   icon: <Zap className="h-4 w-4 text-teal-500" />,
-    // },
-      {
-        title: "Art Style Matching",
-        description: "Find story with similar art styles to your favorites",
-        header: <FeatureAnimation7 />,
-        className: "md:col-span-1",
-        icon: <Palette className="h-4 w-4 text-violet-500" />,
-      },
-    {
-      title: "AI-Powered Recommendations",
-      description:
-        "Our advanced AI understands your preferences and suggests anime that truly resonates with you",
-      header: <FeatureAnimation6 />,
-      className: "md:col-span-2",
-      icon: <Bot className="h-4 w-4 text-violet-500" />,
-    },
-    {
-      title: "Watch History Analysis",
-      description:
-        "Deep insights into your watching patterns to enhance recommendations",
-      header: <FeatureAnimation5 />,
-      className: "md:col-span-1",
-      icon: <History className="h-4 w-4 text-blue-500" />,
-    },
-  ];
 
   if (inView) {
     controls.start("visible");
@@ -326,17 +323,17 @@ export default function FeaturesPage() {
   return (
     <div className="min-h-screen py-12 sm:py-24 px-4 sm:px-6 lg:px-8">
       <motion.div
-        className="text-center mb-12 sm:mb-16 max-w-3xl mx-auto"
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="text-center mb-16"
       >
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
+        <h2 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent mb-4">
           Powerful Features
         </h2>
-        <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300">
-          Discover the magic of AI-powered story recommendations and
-          personalization
+        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          Discover stories and bring characters to life in your personalized
+          realm
         </p>
       </motion.div>
 
@@ -347,9 +344,7 @@ export default function FeaturesPage() {
             title={item.title}
             description={item.description}
             header={item.header}
-            className={`${item.className} ${
-              i === 0 ? "md:col-span-2" : "md:col-span-1"
-            }`}
+            className={item.className}
             icon={item.icon}
           />
         ))}
