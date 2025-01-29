@@ -1,87 +1,187 @@
+# FableWeaver.ai 🎭✨
+
 <p align="center">
-  <a href="https://nextjs-fastapi-starter.vercel.app/">
-    <img src="https://assets.vercel.com/image/upload/v1588805858/repositories/vercel/logo.png" height="96">
-    <h3 align="center">Next.js FastAPI Starter</h3>
-  </a>
+  <h3 align="center">Where AI Weaves Your Story Universe</h3>
+  <p align="center">An innovative AI-powered platform for creating and interacting with dynamic story characters and personalized story recommendations.</p>
 </p>
 
-<p align="center">Simple Next.j 14 boilerplate that uses <a href="https://fastapi.tiangolo.com/">FastAPI</a> as the API backend.</p>
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#getting-started">Getting Started</a> •
+  <a href="#project-structure">Project Structure</a> •
+  <a href="#development">Development</a> •
+  <a href="#deployment">Deployment</a>
+</p>
 
-<br/>
+## ✨ Features
 
-## Introduction
+### 🤖 AI-Powered Character Interactions
+- Dynamic character conversations with context awareness
+- Real-time message exchange with animated responses
+- Character personality persistence across sessions
 
-This is a hybrid Next.js 14 + Python template. One great use case of this is to write Next.js apps that use Python AI libraries on the backend, while still having the benefits of Next.js Route Handlers and Server Side Rendering.
+### 🎭 Character Realm
+- Create and customize unique story characters
+- Character confluence for multi-character interactions
+- Interactive character showcases
 
-## How It Works
+### 🎯 Smart Recommendation System
+- Personalized story and character suggestions
+- AI-driven content curation based on user preferences
+- Watch history tracking and analysis
+- Collaborative filtering for better recommendations
+- Real-time recommendation updates
 
-The Python/FastAPI server is mapped into to Next.js app under `/api/`.
+### 🔐 Secure Authentication
+- Multiple sign-in options (Google & Email)
+- Protected routes and secure sessions
+- Seamless profile management
 
-This is implemented using [`next.config.js` rewrites](https://github.com/digitros/nextjs-fastapi/blob/main/next.config.js) to map any request to `/api/py/:path*` to the FastAPI API, which is hosted in the `/api` folder.
+### 💫 Modern UI/UX
+- Responsive design with beautiful animations
+- Dark/Light theme support
+- Interactive components with Framer Motion
+- Toast notifications and loading states
 
-Also, the app/api routes are available on the same domain, so you can use NextJs Route Handlers and make requests to `/api/...`.
+## 🛠 Tech Stack
 
-On localhost, the rewrite will be made to the `127.0.0.1:8000` port, which is where the FastAPI server is running.
+- **Frontend**: Next.js 14 with TypeScript
+- **Backend**: FastAPI (Python)
+- **Database**: Supabase
+- **Authentication**: NextAuth.js
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Analytics**: Vercel Analytics
+- **Recommendation Engine**: Custom AI model with collaborative filtering
+- **Deployment**: Vercel
 
-In production, the FastAPI server is hosted as [Python serverless functions](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python) on Vercel.
+## 🚀 Getting Started
 
-## Demo
+### Prerequisites
 
-https://nextjs-fastapi-starter.vercel.app/
+- Node.js 18+
+- Python 3.8+
+- npm or yarn
+- Git
 
-## Deploy Your Own
+### Installation
 
-You can clone & deploy it to Vercel with one click:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fdigitros%2Fnextjs-fastapi%2Ftree%2Fmain)
-
-## Developing Locally
-
-You can clone & create this repo with the following command
-
+1. Clone the repository
 ```bash
-npx create-next-app nextjs-fastapi --example "https://github.com/digitros/nextjs-fastapi"
+git clone https://github.com/yourusername/fableweaver.ai.git
+cd fableweaver.ai
 ```
 
-## Getting Started
 
-First, create and activate a virtual environment:
-
+2. Install dependencies
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+npm install   # or yarn install
+pip install -r requirements.txt
 ```
 
-Then, install the dependencies:
-
+3. Set up environment variables
 ```bash
-npm install
-# or
-yarn
-# or
-pnpm install
+cp .env.example .env.local
+```
+Fill in the required environment variables:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
-Then, run the development server(python dependencies will be installed automatically here):
-
+5. Run the development server
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+npm run dev   # or yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) to see your app.
 
-The FastApi server will be running on [http://127.0.0.1:8000](http://127.0.0.1:8000) – feel free to change the port in `package.json` (you'll also need to update it in `next.config.js`).
+## 📁 Project Structure
 
-## Learn More
+```
+├── app/
+│   ├── (authenticated)/     # Protected routes
+│   ├── (unauthenticated)/  # Public routes
+│   ├── (auth)/             # Auth routes
+│   ├── api/                # API endpoints
+│   ├── types/              # Type definitions
+│   ├── layout.tsx          # Root layout
+│   └── globals.css         # Global styles
+├── components/
+│   ├── ui/                 # UI components
+│   ├── layout/            # Layout components
+│   ├── providers/         # Context providers
+│   ├── recommendation-form.tsx  # Recommendation system UI
+│   ├── watched-anime-list.tsx   # User's watch history
+│   └── [feature].tsx      # Feature components
+└── lib/
+    ├── auth.ts            # Auth config
+    ├── supabase.ts        # Database config
+    ├── types.ts           # Shared types
+    ├── recommendation.ts  # Recommendation engine logic
+    └── utils.ts           # Utilities
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 💻 Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [FastAPI Documentation](https://fastapi.tiangolo.com/) - learn about FastAPI features and API.
+### Code Style
+- Use TypeScript for type safety
+- Follow component-based architecture
+- Implement proper error handling
+- Maintain consistent styling with Tailwind CSS
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Running Tests
+```bash
+npm run test   # or yarn test
+```
+
+### Linting
+```bash
+npm run lint   # or yarn lint
+```
+
+## 🌐 Deployment
+
+### Deploy on Vercel
+
+The easiest way to deploy FableWeaver.ai is to use the [Vercel Platform](https://vercel.com).
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/fableweaver.ai)
+
+### Environment Variables
+
+Ensure these environment variables are set in your deployment:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+- `RECOMMENDATION_API_KEY`  # For recommendation system
+- `AI_MODEL_ENDPOINT`       # For AI model integration
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📞 Support
+
+For support, email support@fableweaver.ai or join our Discord community.
+
+---
+
+<p align="center">Made with ❤️ by the FableWeaver Team</p>

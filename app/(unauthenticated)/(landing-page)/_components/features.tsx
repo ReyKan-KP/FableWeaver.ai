@@ -143,11 +143,11 @@ const FeatureAnimation6 = () => {
       whileHover={{ scale: 1.05, rotate: 2 }}
     >
       <Image
-        src="/images/recommendations.svg"
+        src="/images/anime-write.gif"
         alt="Feature icon"
         width={340}
         height={320}
-        className="w-full h-full rounded-lg object-contain flex items-center justify-center"
+        className="w-full h-full rounded-lg object-cover flex items-center justify-center"
       />
     </motion.div>
   );
@@ -296,7 +296,7 @@ const items = [
   {
     title: "Story Weaving",
     description:
-      "Discover new anime while creating immersive scenarios with your favorite characters",
+      "Craft immersive narratives with AI assistance, blending your creativity with intelligent story generation and chapter management",
     header: <FeatureAnimation6 />,
     className: "md:col-span-1",
     icon: <Bot className="h-4 w-4 text-violet-500" />,

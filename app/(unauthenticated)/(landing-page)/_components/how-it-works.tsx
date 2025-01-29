@@ -30,7 +30,7 @@ const HowItWorks = () => {
             </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12 max-w-5xl mx-auto">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 max-w-5xl mx-auto">
             {[
               {
                 step: "01",
@@ -46,10 +46,17 @@ const HowItWorks = () => {
               },
               {
                 step: "03",
-                title: "Weave Your Tale",
+                title: "Connect & Chat",
                 description:
                   "Engage in immersive conversations and group chats while discovering new anime adventures",
               },
+              {
+                step: "04",
+                title: "Weave Your Tale",
+                description:
+                  "Craft immersive narratives with AI assistance, blending your creativity with intelligent story generation and chapter management",
+              },
+
             ].map((step, index) => (
               <m.div
                 key={index}

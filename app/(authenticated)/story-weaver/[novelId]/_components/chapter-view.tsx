@@ -1,0 +1,203 @@
+"use client";
+
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import { Loader2, Edit2, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import ChapterEditor from "./chapter-editor";
+
+interface Chapter {
+  id: string;
+  title: string;
+  content: string;
+  summary: string;
+  chapter_number: number;
+  version: number;
+  created_at: string;
+}
+
+interface ChapterRevision {
+  id: string;
+  content: string;
+  summary: string;
+  version: number;
+  created_at: string;
+}
+
+interface ChapterViewProps {
+  chapters: Chapter[];
+  onChapterUpdate: () => void;
+  onChapterDelete: (chapterId: string) => void;
+}
+
+export default function ChapterView({
+  chapters,
+  onChapterUpdate,
+  onChapterDelete,
+}: ChapterViewProps) {
+  const params = useParams();
+  const { toast } = useToast();
+  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
+  const [revisions, setRevisions] = useState<ChapterRevision[]>([]);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const supabase = createBrowserSupabaseClient();
+
+  const loadRevisions = async (chapterId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("chapter_revisions")
+        .select("*")
+        .eq("chapter_id", chapterId)
+        .order("version", { ascending: false });
+
+      if (error) throw error;
+      setRevisions(data || []);
+    } catch (error) {
+      console.error("Error loading revisions:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load chapter revisions",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteChapter = async (chapterId: string) => {
+    if (!confirm("Are you sure you want to delete this chapter?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("chapters")
+        .delete()
+        .eq("id", chapterId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Chapter deleted successfully",
+      });
+      onChapterDelete(chapterId);
+      setExpandedChapter(null);
+    } catch (error) {
+      console.error("Error deleting chapter:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete chapter",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditChapter = (chapter: Chapter) => {
+    setSelectedChapter(chapter);
+    loadRevisions(chapter.id);
+    setIsEditorOpen(true);
+  };
+
+  const toggleChapter = (chapterId: string) => {
+    setExpandedChapter((prev) => (prev === chapterId ? null : chapterId));
+  };
+
+  return (
+    <div className="space-y-8">
+      <ScrollArea className="h-[600px] rounded-md border p-4">
+        <div className="space-y-4">
+          {chapters.map((chapter) => (
+            <Card
+              key={chapter.id}
+              className="p-4 transition-all duration-200 bg-[#bccff1] dark:bg-zinc-900 "
+            >
+              <div
+                className="flex justify-between items-start cursor-pointer rounded-sm p-2"
+                onClick={() => toggleChapter(chapter.id)}
+              >
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-semibold">
+                      Chapter {chapter.chapter_number}: {chapter.title}
+                    </h3>
+                    {expandedChapter === chapter.id ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {chapter.summary}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 ml-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditChapter(chapter);
+                    }}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteChapter(chapter.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <AnimatePresence>
+                {expandedChapter === chapter.id && (
+                  <motion.div
+                    key={`content-${chapter.id}`}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-4 pt-4 border-t prose prose-sm max-w-none dark:prose-invert">
+                      {chapter.content.split("\n").map((paragraph, i) => (
+                        <p key={i} className="mb-4">
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Card>
+          ))}
+        </div>
+      </ScrollArea>
+
+      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+        <DialogContent className="max-w-4xl">
+          {selectedChapter && (
+            <ChapterEditor
+              chapter={selectedChapter}
+              revisions={revisions}
+              onClose={() => setIsEditorOpen(false)}
+              onUpdate={() => {
+                onChapterUpdate();
+                setIsEditorOpen(false);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

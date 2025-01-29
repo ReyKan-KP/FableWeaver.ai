@@ -31,6 +31,7 @@ import {
   House,
   MessageSquareQuote,
   UsersRound,
+  NotebookPen,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileMenu } from "./mobile-menu";
@@ -58,19 +59,29 @@ const navItems = [
     icon: UsersRound,
   },
   {
+    title: "Story Weaver",
+    href: "/story-weaver",
+    icon: NotebookPen,
+  },
+  {
     title: "Features",
     href: "#features",
     icon: Sparkles,
     items: [
-      { title: "Character Creation", href: "/character-realm", icon: User },
-      { title: "Group Chat", href: "/character-confluence", icon: Layout },
-      { title: "AI Story Generation", href: "/ai-story", icon: Layout },
-      // { title: "World Building", href: "#world-building", icon: Layout },
+      {
+        title: "Character Realm",
+        href: "/character-realm",
+        icon: MessageSquareQuote,
+      },
+
+      { title: "Character Confluence", href: "/character-confluence", icon: UsersRound },
+      { title: "Story Weaver", href: "/story-weaver", icon: NotebookPen },
       {
         title: "Weaving your story Recommendation",
         href: "/weave-anime",
-        icon: Layout,
+        icon: Wand2,
       },
+
     ],
   },
   {
@@ -142,7 +153,7 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center space-x-16">
-          {navItems.slice(0, 4).map((item, index) => (
+          {navItems.slice(0, 5).map((item, index) => (
             <div
               key={item.title}
               className="relative"
@@ -413,7 +424,7 @@ export function Navbar() {
             </DropdownMenu>
           ) : (
             <div className="hidden lg:flex items-center pl-8 space-x-16">
-              {navItems.slice(4, 6).map((item, index) => (
+              {navItems.slice(6, 8).map((item, index) => (
                 <div
                   key={item.title}
                   className="relative"

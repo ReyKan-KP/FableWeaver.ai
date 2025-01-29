@@ -1,0 +1,241 @@
+import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createServerSupabaseClient } from "@/lib/supabase";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+// Initialize Google AI
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+const MAX_RETRIES = 3;
+const INITIAL_DELAY = 1000; // 1 second
+
+async function generateChapterContent(prompt: string, retryCount = 0): Promise<any> {
+    try {
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.8,
+                maxOutputTokens: 8192,
+                stopSequences: ["}"],
+            },
+        });
+
+        const text = result.response.text();
+        console.log("[generateChapterContent] Raw AI response:", text);
+
+        // Extract the JSON object
+        let jsonStr = text;
+        if (!jsonStr.endsWith("}")) {
+            jsonStr += "}";
+        }
+
+        // Try to parse the JSON
+        try {
+            const parsed = JSON.parse(jsonStr);
+            if (!parsed.title?.trim() || !parsed.content?.trim() || !parsed.summary?.trim()) {
+                throw new Error("Missing required fields");
+            }
+            return {
+                title: parsed.title.trim(),
+                content: parsed.content.trim(),
+                summary: parsed.summary.trim(),
+            };
+        } catch (parseError) {
+            // If direct parsing fails, try to extract fields manually
+            const titleMatch = text.match(/"title":\s*"([^"]+)"/);
+            const contentMatch = text.match(/"content":\s*"([^"]+)"/);
+            const summaryMatch = text.match(/"summary":\s*"([^"]+)"/);
+
+            if (!titleMatch || !contentMatch || !summaryMatch) {
+                throw new Error("Could not extract required fields");
+            }
+
+            return {
+                title: titleMatch[1].trim(),
+                content: contentMatch[1]
+                    .replace(/\\n/g, "\n")
+                    .replace(/\\"/g, '"')
+                    .trim(),
+                summary: summaryMatch[1].trim(),
+            };
+        }
+    } catch (error) {
+        console.error("[generateChapterContent] Error:", error);
+        if (retryCount < MAX_RETRIES) {
+            console.log(`[generateChapterContent] Retrying after ${INITIAL_DELAY * Math.pow(2, retryCount)}ms`);
+            await new Promise(resolve => setTimeout(resolve, INITIAL_DELAY * Math.pow(2, retryCount)));
+            return generateChapterContent(prompt, retryCount + 1);
+        }
+        throw error;
+    }
+}
+
+export async function POST(req: Request) {
+    console.log("[POST] Starting chapter generation request");
+    try {
+        // 1. Validate session
+        console.log("[POST] Validating session");
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            console.log("[POST] Unauthorized - no valid session");
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        // 2. Parse request body
+        console.log("[POST] Parsing request body");
+        const { novelId, prompt, previousChapter, chapterNumber } = await req.json();
+        console.log("[POST] Request parameters:", { novelId, prompt, chapterNumber, hasPreviousChapter: !!previousChapter });
+
+        if (!novelId || !prompt || !chapterNumber) {
+            console.log("[POST] Missing required fields in request");
+            return NextResponse.json(
+                { error: "Missing required fields" },
+                { status: 400 }
+            );
+        }
+
+        // 3. Initialize Supabase client
+        console.log("[POST] Initializing Supabase client");
+        const supabase = createServerSupabaseClient();
+
+        // 4. Verify novel ownership
+        console.log("[POST] Verifying novel ownership");
+        const { data: novel, error: novelError } = await supabase
+            .from("novels")
+            .select("genre, title, description")
+            .eq("id", novelId)
+            .eq("user_id", session.user.id)
+            .single();
+
+        if (novelError || !novel) {
+            console.log("[POST] Novel ownership verification failed:", novelError);
+            return NextResponse.json(
+                { error: "Novel not found or access denied" },
+                { status: 404 }
+            );
+        }
+
+        // 5. Construct the prompt for the AI
+        const genrePrompts = {
+            fantasy: "You are a master of fantasy storytelling, skilled in weaving tales of magic, mythical creatures, and epic adventures.",
+            mystery: "You are a mystery writer, expert in crafting suspenseful narratives with clever plot twists and intricate clues.",
+            romance: "You are a romance author, specializing in creating emotionally resonant stories about love, relationships, and personal growth.",
+            scifi: "You are a science fiction writer, adept at building compelling futures with advanced technology and thought-provoking concepts.",
+            horror: "You are a horror writer, masterful at crafting atmospheric tales of suspense, fear, and psychological tension.",
+        };
+
+        const genreContext = genrePrompts[novel.genre as keyof typeof genrePrompts] ||
+            "You are a skilled storyteller, adept at crafting engaging narratives.";
+
+        const contextPrompt = `You are tasked with generating Chapter ${chapterNumber} for a ${novel.genre} novel titled "${novel.title}".
+
+Novel Description: ${novel.description}
+
+${previousChapter ? `Previous Chapter Summary: ${previousChapter.summary}
+
+This new chapter should naturally follow from these events.` : "This is the first chapter of the novel."}
+
+User's Request for this chapter: ${prompt}
+
+Important Guidelines:
+1. Maintain consistency with the novel's ${novel.genre} genre and established style
+2. Advance the plot in an engaging way that follows from previous events
+3. Include meaningful character interactions and development
+4. Create vivid scenes with descriptive details
+5. Write natural dialogue that reveals character personalities
+
+You must respond with a complete JSON object in this exact format:
+{
+    "title": "A descriptive chapter title",
+    "content": "The complete chapter content with proper paragraphs and dialogue",
+    "summary": "A 2-3 sentence summary of the key events in this chapter"
+}
+
+The content should be a complete chapter with a clear beginning, middle, and end.
+Do not truncate or cut off the content.
+Include proper paragraph breaks using \\n.
+Use proper quotation marks for dialogue.
+Do not include any text before or after the JSON object.`;
+
+        // 6. Generate the chapter content with retries
+        console.log("[POST] Starting chapter generation");
+        let chapterData;
+        try {
+            chapterData = await generateChapterContent(contextPrompt);
+            console.log("[POST] Chapter generation successful");
+        } catch (error) {
+            console.error("[POST] Chapter generation failed after all retries:", error);
+            return NextResponse.json({
+                error: "Failed to generate chapter content",
+                details: error instanceof Error ? error.message : "Unknown error",
+            }, { status: 500 });
+        }
+
+        // 7. Save to database
+        console.log("[POST] Saving chapter to database");
+        const { data: chapter, error: insertError } = await supabase
+            .from("chapters")
+            .insert([
+                {
+                    novel_id: novelId,
+                    title: chapterData.title,
+                    content: chapterData.content,
+                    summary: chapterData.summary,
+                    chapter_number: chapterNumber,
+                    version: 1,
+                    word_count: chapterData.content.split(/\s+/).length,
+                    is_published: false,
+                    metadata: {
+                        generated_from_prompt: prompt,
+                        ai_model: "gemini-pro",
+                        generation_attempts: 1,
+                    },
+                },
+            ])
+            .select()
+            .single();
+
+        if (insertError) {
+            console.error("[POST] Database insertion error:", insertError);
+            return NextResponse.json(
+                { error: "Failed to save chapter to database" },
+                { status: 500 }
+            );
+        }
+        console.log("[POST] Chapter saved successfully");
+
+        // 8. Update novel's chapter count and last_chapter_at
+        console.log("[POST] Updating novel metadata");
+        const { error: updateError } = await supabase
+            .from("novels")
+            .update({
+                chapter_count: chapterNumber,
+                last_chapter_at: new Date().toISOString(),
+            })
+            .eq("id", novelId);
+
+        if (updateError) {
+            console.error("[POST] Error updating novel metadata:", updateError);
+        }
+
+        // 9. Return the created chapter
+        console.log("[POST] Request completed successfully");
+        return NextResponse.json({ chapter });
+    } catch (error) {
+        console.error("[POST] Unexpected error in chapter generation:", error);
+        return NextResponse.json(
+            {
+                error: "An unexpected error occurred",
+                details: error instanceof Error ? error.message : "Unknown error"
+            },
+            { status: 500 }
+        );
+    }
+} 
