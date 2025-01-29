@@ -69,7 +69,7 @@
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/fableweaver.ai.git
+git clone https://github.com/ReyKan-KP/FableWeaver.ai
 cd fableweaver.ai
 ```
 
@@ -77,7 +77,6 @@ cd fableweaver.ai
 2. Install dependencies
 ```bash
 npm install   # or yarn install
-pip install -r requirements.txt
 ```
 
 3. Set up environment variables
@@ -142,14 +141,6 @@ npm run test   # or yarn test
 ```bash
 npm run lint   # or yarn lint
 ```
-
-## 🌐 Deployment
-
-### Deploy on Vercel
-
-The easiest way to deploy FableWeaver.ai is to use the [Vercel Platform](https://vercel.com).
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/fableweaver.ai)
 
 ### Environment Variables
 
