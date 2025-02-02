@@ -156,18 +156,18 @@ export default function InteractiveDemo() {
   };
 
   return (
-    <section className="py-20">
+    <section className="py-10 sm:py-20">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-8 sm:mb-16"
         >
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent mb-4">
             Experience the Magic
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto px-2">
             See how our AI characters come to life through natural conversations
             and unique personalities.
           </p>
@@ -181,7 +181,7 @@ export default function InteractiveDemo() {
         >
           <Card className="bg-[#bccff1] dark:bg-zinc-900 border-none shadow-lg transform-gpu transition-all duration-300 hover:shadow-xl">
             <ScrollArea
-              className="h-[600px] px-4 py-6 dark:bg-dot-white/[0.2] bg-dot-black/[0.2]"
+              className="h-[400px] sm:h-[600px] px-2 sm:px-4 py-4 sm:py-6 dark:bg-dot-white/[0.2] bg-dot-black/[0.2]"
               ref={scrollAreaRef}
             >
               <CardContent className="space-y-4">
@@ -206,7 +206,7 @@ export default function InteractiveDemo() {
                     >
                       {message.sender === "ai" && (
                         <motion.div
-                          className="w-[55px] h-[55px] rounded-full overflow-hidden mr-2 flex-shrink-0"
+                          className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] rounded-full overflow-hidden mr-2 flex-shrink-0"
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           whileTap={{ scale: 0.9 }}
                           transition={{
@@ -243,13 +243,13 @@ export default function InteractiveDemo() {
                         }}
                       >
                         <motion.div
-                          className="bg-background rounded-full px-5 py-2 flex items-center"
+                          className="bg-background rounded-full px-3 sm:px-5 py-2 flex items-center"
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: index * 0.1 }}
                         >
                           {index === messages.length - 1 && isTyping ? (
-                            <p className="whitespace-pre-wrap leading-relaxed text-sm dark:text-gray-200">
+                            <p className="whitespace-pre-wrap leading-relaxed text-xs sm:text-sm dark:text-gray-200">
                               <TypewriterText
                                 text={
                                   presetConversation[currentMessageIndex].text
@@ -258,12 +258,12 @@ export default function InteractiveDemo() {
                               />
                             </p>
                           ) : (
-                            <p className="whitespace-pre-wrap leading-relaxed text-sm dark:text-gray-200">
+                            <p className="whitespace-pre-wrap leading-relaxed text-xs sm:text-sm dark:text-gray-200">
                               {message.text}
                             </p>
                           )}
                           <motion.span
-                            className="text-[10px] text-gray-500 dark:text-gray-400 ml-2"
+                            className="hidden sm:inline text-[10px] text-gray-500 dark:text-gray-400 ml-2"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
@@ -281,7 +281,7 @@ export default function InteractiveDemo() {
                       </motion.div>
                       {message.sender === "user" && (
                         <motion.div
-                          className="w-[55px] h-[55px] rounded-full overflow-hidden ml-2 flex-shrink-0"
+                          className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] rounded-full overflow-hidden ml-2 flex-shrink-0"
                           whileHover={{ scale: 1.1, rotate: -5 }}
                           whileTap={{ scale: 0.9 }}
                           transition={{
@@ -304,7 +304,7 @@ export default function InteractiveDemo() {
                 </AnimatePresence>
               </CardContent>
             </ScrollArea>
-            <CardFooter className="p-4 border-t bg-background/80 backdrop-blur-sm">
+            <CardFooter className="p-2 sm:p-4 border-t bg-background/80 backdrop-blur-sm">
               <motion.div
                 className="flex w-full items-center space-x-2"
                 variants={inputVariants}

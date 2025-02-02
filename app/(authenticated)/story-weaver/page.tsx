@@ -18,6 +18,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { WavyBackground } from "@/components/ui/wavy-background";
+import StoryWeaverLoading from "./loading";
 import {
   Download,
   Book,
@@ -281,14 +282,7 @@ export default function StoryWeaver() {
   };
 
   if (status === "loading" || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <StoryWeaverLoading />;
   }
 
   return (

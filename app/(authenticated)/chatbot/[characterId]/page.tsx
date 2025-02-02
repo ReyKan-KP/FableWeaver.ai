@@ -16,13 +16,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import CharacterChatLoading from "./loading";
 interface ChatSessionResponse {
   session_id: string;
   messages: Message[];
   continued: boolean;
   error?: string;
 }
+
 
 export default function CharacterChatPage() {
   const params = useParams();
@@ -107,18 +108,7 @@ export default function CharacterChatPage() {
   }
 
   if (isLoading || !character || !sessionId) {
-    return (
-      <div className="max-w-5xl mx-auto p-4 py-6 min-h-screen space-y-4">
-        <div className="flex items-center space-x-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
-          </div>
-        </div>
-        <Skeleton className="h-[600px] w-full rounded-xl" />
-      </div>
-    );
+    return <CharacterChatLoading />;
   }
 
   return (

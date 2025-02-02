@@ -481,14 +481,14 @@ export default function NovelView() {
               </div>
             </div>
           </div>
-          {/* <motion.div
+          <motion.div
             className="flex items-center gap-2"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
             <ExportButton novelId={params.novelId as string} />
-          </motion.div> */}
+          </motion.div>
         </div>
         <motion.p
           className="text-lg"

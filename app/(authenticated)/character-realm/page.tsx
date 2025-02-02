@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import CharacterRealmLoading from "./loading";
 
 export default function CharactersPage() {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -145,14 +146,7 @@ export default function CharactersPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen dark:bg-gray-900">
-        <div className="relative w-12 h-12">
-          <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-200 dark:border-blue-800 rounded-full animate-ping"></div>
-          <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-500 dark:border-blue-400 rounded-full animate-pulse"></div>
-        </div>
-      </div>
-    );
+    return <CharacterRealmLoading />;
   }
 
   return (
@@ -332,18 +326,16 @@ export default function CharactersPage() {
                 <span className="text-sm text-gray-500 dark:text-gray-400 italic">
                   From: {character.content_source}
                 </span>
-                <motion.div
+                <motion.a
+                  href={`/chatbot/${character.id}`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2 bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 text-white 
+                      rounded-full hover:shadow-lg transform transition-all duration-300 flex items-center gap-2"
                 >
-                  <Link
-                    href={`/chatbot/${character.id}`}
-                    className="px-4 py-2 bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 text-white 
-                    rounded-full hover:shadow-lg transform transition-all duration-300"
-                  >
-                    Chat Now
-                  </Link>
-                </motion.div>
+                  <Sparkles className="w-4 h-4" />
+                  Chat Now
+                </motion.a>
               </div>
             </div>
           </motion.div>

@@ -1,101 +1,276 @@
-import React from 'react'
-import Link from "next/link";
+"use client";
 
+import React, { useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   Github,
   Twitter,
   Mail,
-  ChevronRight,
+  BookOpen,
+  Users,
+  Bot,
+  Tv,
+  User,
+  MessageSquare,
+  Sparkles,
+  Star,
+  Heart,
+  ExternalLink,
+  Linkedin,
+  Loader2,
 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+
+interface FooterLink {
+  href: string;
+  label: string;
+  icon?: React.ElementType;
+}
+
+interface FooterSection {
+  title: string;
+  links: FooterLink[];
+}
+
 const Footer = () => {
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleNewsletterSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "newsletter",
+          email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to subscribe");
+      }
+
+      toast({
+        title: "Welcome aboard! 🎉",
+        description: "Check your email for a special welcome message.",
+        variant: "default",
+      });
+
+      setEmail("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to subscribe. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const mainLinks: FooterSection[] = [
+    {
+      title: "Create",
+      links: [
+        { href: "/story-weaver", label: "Story Weaver", icon: BookOpen },
+        { href: "/character-realm", label: "Character Realm", icon: Bot },
+        { href: "/weave-anime", label: "Weave Anime", icon: Tv },
+      ],
+    },
+    {
+      title: "Connect",
+      links: [
+        { href: "/contact", label: "Contact Us", icon: MessageSquare },
+        { href: "/character-realm", label: "Character Realm", icon: Bot },
+        {
+          href: "/character-confluence",
+          label: "Character Confluence",
+          icon: Users,
+        },
+      ],
+    },
+    {
+      title: "Company",
+      links: [
+        { href: "/about", label: "About Us" },
+        {
+          href: "https://portfolio-kanishaka-pranjal.vercel.app/",
+          label: "Portfolio",
+        },
+      ],
+    },
+    {
+      title: "Legal",
+      links: [
+        { href: "/privacy", label: "Privacy Policy" },
+        { href: "/terms", label: "Terms of Service" },
+        { href: "/cookies", label: "Cookie Policy" },
+      ],
+    },
+  ];
+
+  const socialLinks: Required<Pick<FooterLink, "href" | "icon" | "label">>[] = [
+    { href: "https://github.com/ReyKan-KP", icon: Github, label: "GitHub" },
+    {
+      href: "https://www.linkedin.com/in/kanishaka-pranjal-070a45235/",
+      icon: Linkedin,
+      label: "LinkedIn",
+    },
+    { href: "mailto:kanishakpranjal@gmail.com", icon: Mail, label: "Email" },
+  ];
+
   return (
-    <footer className="py-16">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-12 max-w-5xl mx-auto">
-          <div className="text-center md:text-left">
-            <h3 className="text-2xl font-bold mb-6">FableWeaver.ai</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-lg">
-              Where AI meets anime recommendations
+    <footer className="w-full mt-auto bg-gradient-to-b from-background via-background/80 to-background border-t border-border">
+      {/* Main Footer Content */}
+      <div className="container mx-auto px-4 py-8 sm:py-10 md:py-12">
+        {/* Logo and Description */}
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-6 sm:gap-8 mb-8 sm:mb-10 md:mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-[280px] sm:max-w-sm"
+          >
+            <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+              FableWeaver.ai
+            </h2>
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground">
+              Unleash your creativity with AI-powered storytelling. Create
+              characters, weave tales, and explore new worlds.
             </p>
-          </div>
-          <div className="text-center md:text-left">
-            <h4 className="text-xl font-semibold mb-6">Product</h4>
-            <ul className="space-y-4">
-              <li>
-                <Link
-                  href="/weave-anime"
-                  className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 text-lg flex items-center justify-center md:justify-start"
-                >
-                  <ChevronRight className="mr-2 h-5 w-5" />
-                  WeaveAnime
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/features"
-                  className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 text-lg flex items-center justify-center md:justify-start"
-                >
-                  <ChevronRight className="mr-2 h-5 w-5" />
-                  Features
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div className="text-center md:text-left">
-            <h4 className="text-xl font-semibold mb-6">Company</h4>
-            <ul className="space-y-4">
-              <li>
-                <Link
-                  href="/about"
-                  className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 text-lg flex items-center justify-center md:justify-start"
-                >
-                  <ChevronRight className="mr-2 h-5 w-5" />
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 text-lg flex items-center justify-center md:justify-start"
-                >
-                  <ChevronRight className="mr-2 h-5 w-5" />
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div className="text-center md:text-left">
-            <h4 className="text-xl font-semibold mb-6">Connect</h4>
-            <div className="flex space-x-6 justify-center md:justify-start">
-              <Link
-                href="https://github.com"
-                className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-300"
+          </motion.div>
+
+          {/* Newsletter Signup */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="w-full sm:w-auto min-w-[280px] sm:min-w-[320px] md:min-w-[380px]"
+          >
+            <div className=" backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-border">
+              <h3 className="text-base sm:text-lg font-semibold mb-2 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                Stay Updated
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+                Join our newsletter for the latest updates and features.
+              </p>
+              <form
+                onSubmit={handleNewsletterSignup}
+                className="flex flex-col sm:flex-row gap-2"
               >
-                <Github className="h-8 w-8" />
-              </Link>
-              <Link
-                href="https://twitter.com"
-                className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-300"
-              >
-                <Twitter className="h-8 w-8" />
-              </Link>
-              <Link
-                href="mailto:contact@fableweaver.ai"
-                className="text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-300"
-              >
-                <Mail className="h-8 w-8" />
-              </Link>
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 px-3 sm:px-4 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  required
+                  disabled={isSubmitting}
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="sr-only">Subscribing...</span>
+                    </>
+                  ) : (
+                    "Subscribe"
+                  )}
+                </button>
+              </form>
             </div>
-          </div>
+          </motion.div>
         </div>
-        <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-center text-gray-600 dark:text-gray-300 text-lg">
-            © {new Date().getFullYear()} FableWeaver.ai. All rights reserved.
-          </p>
+
+        {/* Links Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 mb-8 sm:mb-10 md:mb-12">
+          {mainLinks.map((section, idx) => (
+            <motion.div
+              key={section.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <h3 className="font-semibold mb-3 sm:mb-4 text-base sm:text-lg">
+                {section.title}
+              </h3>
+              <ul className="space-y-2 sm:space-y-3">
+                {section.links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-sm sm:text-base text-muted-foreground hover:text-primary transition-colors duration-200 flex items-center gap-2 group"
+                    >
+                      {link.icon && (
+                        <link.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:text-primary transition-colors duration-200" />
+                      )}
+                      {link.label}
+                      {!link.icon && (
+                        <ExternalLink className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 sm:pt-8 border-t border-border">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex items-center gap-4 sm:gap-6"
+          >
+            {socialLinks.map((social) => (
+              <Link
+                key={social.label}
+                href={social.href}
+                className="text-muted-foreground hover:text-primary transition-colors duration-200"
+                aria-label={social.label}
+              >
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <social.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                </motion.div>
+              </Link>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center text-xs sm:text-sm text-muted-foreground"
+          >
+            <p className="flex items-center justify-center gap-1 sm:gap-2">
+              Made with{" "}
+              <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 animate-pulse" />{" "}
+              by Kanishaka Pranjal
+              <span className="mx-1 sm:mx-2">•</span>©{" "}
+              {new Date().getFullYear()} All rights reserved
+            </p>
+          </motion.div>
         </div>
       </div>
     </footer>
   );
-}
+};
 
-export default Footer
+export default Footer;

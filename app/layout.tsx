@@ -7,9 +7,11 @@ import "./globals.css";
 import Footer from "@/components/layout/footer";
 import { Analytics } from "@vercel/analytics/react";
 import { AnimatedGradient } from "@/components/ui/animated-gradient";
+import type { Metadata } from "next";
+
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "FableWeaver.ai",
   description: "Where AI Weaves Your Story Universe",
 };
@@ -35,7 +37,9 @@ export default async function RootLayout({
               <Toaster />
               {children}
             </main>
-            <Footer />
+            <footer className="mt-auto">
+              <Footer />
+            </footer>
             <Analytics />
           </ThemeProvider>
         </AuthProvider>

@@ -74,7 +74,7 @@ export function AnimeCard({ anime }: AnimeCardProps) {
                   <Image
                     src={anime.image_url || "/placeholder.svg"}
                     alt={anime.title}
-                    className="object-cover w-full h-[20vh] rounded-t-lg"
+                    className="object-cover w-full h-[15vh] sm:h-[18vh] lg:h-[20vh] rounded-t-lg"
                     width={500}
                     height={500}
                   />
@@ -87,29 +87,31 @@ export function AnimeCard({ anime }: AnimeCardProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.3 }}
               >
-                <CardTitle className="text-white line-clamp-1 text-xl font-bold">
+                <CardTitle className="text-white line-clamp-1 text-lg sm:text-xl font-bold">
                   {anime.title}
                 </CardTitle>
-                <p className="text-white/80 text-sm">
+                <p className="text-white/80 text-xs sm:text-sm">
                   {anime.year} {anime.season}
                 </p>
               </motion.div>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-4">
+            <CardContent className="flex-1 flex flex-col p-3 sm:p-4">
               <motion.div
                 className="flex items-center mb-2"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4, duration: 0.3 }}
               >
-                <Star className="text-yellow-400 w-5 h-5 mr-1" />
-                <span className="font-bold">{anime.rating.toFixed(1)}</span>
+                <Star className="text-yellow-400 w-4 h-4 sm:w-5 sm:h-5 mr-1" />
+                <span className="font-bold text-sm sm:text-base">
+                  {anime.rating.toFixed(1)}
+                </span>
               </motion.div>
               <AnimatePresence mode="wait">
                 {showFullDescription ? (
                   <motion.p
                     key="full-description"
-                    className="text-sm mb-4 flex-grow"
+                    className="text-xs sm:text-sm mb-3 sm:mb-4 flex-grow"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
@@ -120,7 +122,7 @@ export function AnimeCard({ anime }: AnimeCardProps) {
                 ) : (
                   <motion.p
                     key="truncated-description"
-                    className="text-sm line-clamp-3 mb-4 flex-grow"
+                    className="text-xs sm:text-sm line-clamp-3 mb-3 sm:mb-4 flex-grow"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -133,7 +135,7 @@ export function AnimeCard({ anime }: AnimeCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="self-start mb-2 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200"
+                className="self-start mb-2 text-xs sm:text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-200"
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowFullDescription(!showFullDescription);
@@ -142,7 +144,7 @@ export function AnimeCard({ anime }: AnimeCardProps) {
                 {showFullDescription ? "Show less" : "Show more"}
               </Button>
               <motion.div
-                className="flex flex-wrap gap-2 mb-4"
+                className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6, duration: 0.3 }}
@@ -151,14 +153,14 @@ export function AnimeCard({ anime }: AnimeCardProps) {
                   <Badge
                     key={genre}
                     variant="secondary"
-                    className="bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200"
+                    className="text-xs sm:text-sm bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200"
                   >
                     {genre}
                   </Badge>
                 ))}
               </motion.div>
               <motion.div
-                className="mt-auto flex justify-end gap-2"
+                className="mt-auto flex justify-end gap-1 sm:gap-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8, duration: 0.3 }}

@@ -85,7 +85,7 @@ export default function Chat({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto bg-[#bccff1] dark:bg-zinc-900 border-none shadow-lg">
+    <Card className="w-full max-w-4xl mx-auto bg-[#bccff1] dark:bg-zinc-900 rounded-4xl border-none shadow-lg">
       <ScrollArea
         className="h-[600px] px-4 py-6 dark:bg-dot-white/[0.2] bg-dot-black/[0.2]"
         ref={scrollAreaRef}

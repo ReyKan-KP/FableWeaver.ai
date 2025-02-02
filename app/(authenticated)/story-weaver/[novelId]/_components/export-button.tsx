@@ -30,6 +30,13 @@ export default function ExportButton({ novelId }: ExportButtonProps) {
         throw new Error(error.message || "Failed to export PDF");
       }
 
+      // Get the filename from the Content-Disposition header
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch
+        ? filenameMatch[1]
+        : `novel-${novelId}.pdf`;
+
       // Get the blob from the response
       const blob = await response.blob();
 
@@ -39,9 +46,9 @@ export default function ExportButton({ novelId }: ExportButtonProps) {
       // Create a temporary link element
       const link = document.createElement("a");
       link.href = url;
-      link.download = `novel-${novelId}.pdf`;
+      link.download = filename;
 
-      // Append to the document, click it, and remove it
+      // Trigger the download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -57,7 +64,10 @@ export default function ExportButton({ novelId }: ExportButtonProps) {
       console.error("Error exporting PDF:", error);
       toast({
         title: "Error",
-        description: "Failed to export novel as PDF",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to export novel as PDF",
         variant: "destructive",
       });
     } finally {

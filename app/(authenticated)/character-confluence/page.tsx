@@ -20,7 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-
+import CharacterConfluenceLoading from "./loading";
 interface User {
   id: string;
   name: string;
@@ -205,14 +205,7 @@ export default function CharacterConfluence() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <CharacterConfluenceLoading />;
   }
 
   return (
