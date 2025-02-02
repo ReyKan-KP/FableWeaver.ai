@@ -37,7 +37,7 @@ import {
 import { ThemeToggle } from "./theme-toggle";
 import { MobileMenu } from "./mobile-menu";
 import { title } from "process";
-
+import Image from "next/image";
 const navItems = [
   {
     title: "Home",
@@ -154,9 +154,16 @@ export function Navbar() {
       <div className=" rounded-full mx-auto h-12 sm:h-14 md:h-16 flex items-center justify-between">
         <Link
           href="/"
-          className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-teal-500 text-transparent bg-clip-text pr-2 sm:pr-4 md:pr-6"
+          className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-teal-500 text-transparent bg-clip-text pr-2 sm:pr-4 md:pr-6 flex items-center gap-2"
           onClick={() => setActiveTab("Home")}
         >
+          <Image
+            src="/images/logo.png"
+            alt="FableWeaver.ai"
+            className="w-45 h-45"
+            width={80}
+            height={80}
+          />
           FableWeaver.ai
         </Link>
 

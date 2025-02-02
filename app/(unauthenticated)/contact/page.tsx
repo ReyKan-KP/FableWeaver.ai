@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import Image from "next/image";
 
 const ContactPage = () => {
   const { toast } = useToast();
@@ -125,6 +126,35 @@ const ContactPage = () => {
             variants={containerVariants}
             className="space-y-16"
           >
+            {/* Logo */}
+            <motion.div
+              variants={itemVariants}
+              className="flex justify-center"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <motion.div
+                initial={{ rotate: -5 }}
+                animate={{ rotate: 5 }}
+                transition={{
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  duration: 2,
+                  ease: "easeInOut",
+                }}
+              >
+                <Image
+                  src="/images/logo-with-text.png"
+                  alt="FableWeaver.ai Logo"
+                  width={500}
+                  height={100}
+                  className="mb-8"
+                  priority
+                  draggable={false}
+                />
+              </motion.div>
+            </motion.div>
+
             {/* Hero Section */}
             <motion.div
               variants={itemVariants}

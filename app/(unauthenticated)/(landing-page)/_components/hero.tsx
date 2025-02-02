@@ -100,7 +100,7 @@ export function Hero() {
                     transformPerspective: 1000,
                   }}
                 >
-                  Fable Weaver
+                  FableWeaver.ai
                 </motion.h1>
                 <motion.p
                   className={`text-lg sm:text-xl md:text-2xl lg:text-3xl max-w-[90%] sm:max-w-2xl md:max-w-3xl mx-auto leading-relaxed ${THEME.colors.text.secondary} px-4 sm:px-6`}
@@ -111,8 +111,7 @@ export function Hero() {
                     duration: THEME.animation.duration,
                   }}
                 >
-                  Fable Weaver is an AI-powered platform that allows you to
-                  create and interact with your own AI characters.
+                  Where AI Weaves Your Stories to Life
                 </motion.p>
                 <motion.div
                   className="flex gap-4 sm:gap-6 justify-center mt-6 sm:mt-8"

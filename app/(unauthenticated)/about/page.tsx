@@ -66,32 +66,32 @@ const AboutPage = () => {
       title: "Advanced AI Integration",
       description:
         "Powered by cutting-edge GenAI technologies, enabling natural language processing and dynamic character interactions.",
-    //   techStack: ["LangChain", "OpenAI GPT-4", "Vercel AI SDK"],
+      //   techStack: ["LangChain", "OpenAI GPT-4", "Vercel AI SDK"],
     },
     {
       icon: Star,
       title: "Personalization",
       description:
         "GenAI-driven recommendation system that learns from your preferences to suggest relevant content and character interactions, improving engagement by 18%.",
-    //   techStack: [
-    //     "Machine Learning",
-    //     "Neural Networks",
-    //     "Recommendation Algorithms",
-    //   ],
+      //   techStack: [
+      //     "Machine Learning",
+      //     "Neural Networks",
+      //     "Recommendation Algorithms",
+      //   ],
     },
     {
       icon: Sparkles,
       title: "Real-time Generation",
       description:
         "Fast and responsive content generation with our optimized AI pipeline, delivering instant responses and story progression.",
-    //   techStack: ["WebSocket", "Server-Sent Events", "Stream Processing"],
+      //   techStack: ["WebSocket", "Server-Sent Events", "Stream Processing"],
     },
     {
       icon: Code,
       title: "Modern Architecture",
       description:
         "Built with Next.js, TypeScript, and Tailwind CSS for a robust, scalable platform with beautiful UI/UX design and optimal performance.",
-    //   techStack: ["Next.js 14", "TypeScript", "Tailwind CSS", "PostgreSQL"],
+      //   techStack: ["Next.js 14", "TypeScript", "Tailwind CSS", "PostgreSQL"],
     },
   ];
 
@@ -149,6 +149,35 @@ const AboutPage = () => {
             variants={containerVariants}
             className="space-y-16"
           >
+            {/* Logo */}
+            <motion.div
+              variants={itemVariants}
+              className="flex justify-center"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <motion.div
+                initial={{ rotate: -5 }}
+                animate={{ rotate: 5 }}
+                transition={{
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  duration: 2,
+                  ease: "easeInOut",
+                }}
+              >
+                <Image
+                  src="/images/logo-with-text.png"
+                  alt="FableWeaver.ai Logo"
+                  width={500}
+                  height={100}
+                  className="mb-8"
+                  priority
+                  draggable={false}
+                />
+              </motion.div>
+            </motion.div>
+
             {/* Hero Section with Animated Background */}
             <motion.div
               variants={itemVariants}
