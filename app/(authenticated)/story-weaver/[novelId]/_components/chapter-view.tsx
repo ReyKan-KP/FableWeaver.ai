@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Loader2, Edit2, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ChapterEditor from "./chapter-editor";
@@ -20,6 +21,8 @@ interface Chapter {
   chapter_number: number;
   version: number;
   created_at: string;
+  is_published: boolean;
+  is_public: boolean;
 }
 
 interface ChapterRevision {
@@ -133,6 +136,84 @@ export default function ChapterView({
                   <p className="text-sm text-muted-foreground">
                     {chapter.summary}
                   </p>
+                  <div className="flex items-center gap-4 mt-2">
+                    {/* <div
+                      className="flex items-center gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <label className="text-sm text-muted-foreground">
+                        Public:
+                      </label>
+                      <Switch
+                        checked={chapter.is_public}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const { error } = await supabase
+                              .from("chapters")
+                              .update({ is_public: checked })
+                              .eq("id", chapter.id);
+
+                            if (error) throw error;
+
+                            onChapterUpdate();
+                            toast({
+                              title: "Success",
+                              description: `Chapter is now ${checked ? "public" : "private"}`,
+                            });
+                          } catch (error) {
+                            console.error(
+                              "Error updating chapter visibility:",
+                              error
+                            );
+                            toast({
+                              title: "Error",
+                              description:
+                                "Failed to update chapter visibility",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      />
+                    </div> */}
+                    <div
+                      className="flex items-center gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <label className="text-sm text-muted-foreground">
+                        Published:
+                      </label>
+                      <Switch
+                        checked={chapter.is_published}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            const { error } = await supabase
+                              .from("chapters")
+                              .update({ is_published: checked })
+                              .eq("id", chapter.id);
+
+                            if (error) throw error;
+
+                            onChapterUpdate();
+                            toast({
+                              title: "Success",
+                              description: `Chapter is now ${checked ? "published" : "unpublished"}`,
+                            });
+                          } catch (error) {
+                            console.error(
+                              "Error updating chapter publish status:",
+                              error
+                            );
+                            toast({
+                              title: "Error",
+                              description:
+                                "Failed to update chapter publish status",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 ml-4">
                   <Button

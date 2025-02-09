@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+    GoogleGenerativeAI, HarmCategory,
+    HarmBlockThreshold,
+} from "@google/generative-ai";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 // Initialize Google AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
 
 const MAX_RETRIES = 3;
 const INITIAL_DELAY = 1000; // 1 second
@@ -17,10 +20,10 @@ async function generateChapterContent(prompt: string, retryCount = 0): Promise<a
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: {
                 temperature: 0.7,
-                topK: 40,
-                topP: 0.8,
-                maxOutputTokens: 8192,
-                stopSequences: ["}"],
+                topP: 0.95,
+                topK: 64,
+                maxOutputTokens: 65536,
+                stopSequences: ["###END###"],
             },
         });
 
@@ -29,9 +32,12 @@ async function generateChapterContent(prompt: string, retryCount = 0): Promise<a
 
         // Extract the JSON object
         let jsonStr = text;
-        if (!jsonStr.endsWith("}")) {
-            jsonStr += "}";
+        // Try to find the complete JSON object
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error("Could not find valid JSON in response");
         }
+        jsonStr = jsonMatch[0];
 
         // Try to parse the JSON
         try {
@@ -43,12 +49,20 @@ async function generateChapterContent(prompt: string, retryCount = 0): Promise<a
                 title: parsed.title.trim(),
                 content: parsed.content.trim(),
                 summary: parsed.summary.trim(),
+                plotPoints: parsed.plotPoints || [],
+                characterArcs: parsed.characterArcs || [],
+                characterRelationships: parsed.characterRelationships || [],
+                storyDirection: parsed.storyDirection || "",
             };
         } catch (parseError) {
             // If direct parsing fails, try to extract fields manually
             const titleMatch = text.match(/"title":\s*"([^"]+)"/);
             const contentMatch = text.match(/"content":\s*"([^"]+)"/);
             const summaryMatch = text.match(/"summary":\s*"([^"]+)"/);
+            const plotPointsMatch = text.match(/"plotPoints":\s*(\[[^\]]+\])/);
+            const characterArcsMatch = text.match(/"characterArcs":\s*(\[[^\]]+\])/);
+            const characterRelationshipsMatch = text.match(/"characterRelationships":\s*(\[[^\]]+\])/);
+            const storyDirectionMatch = text.match(/"storyDirection":\s*"([^"]+)"/);
 
             if (!titleMatch || !contentMatch || !summaryMatch) {
                 throw new Error("Could not extract required fields");
@@ -61,6 +75,10 @@ async function generateChapterContent(prompt: string, retryCount = 0): Promise<a
                     .replace(/\\"/g, '"')
                     .trim(),
                 summary: summaryMatch[1].trim(),
+                plotPoints: plotPointsMatch ? JSON.parse(plotPointsMatch[1]) : [],
+                characterArcs: characterArcsMatch ? JSON.parse(characterArcsMatch[1]) : [],
+                characterRelationships: characterRelationshipsMatch ? JSON.parse(characterRelationshipsMatch[1]) : [],
+                storyDirection: storyDirectionMatch ? storyDirectionMatch[1].trim() : "",
             };
         }
     } catch (error) {
@@ -134,35 +152,114 @@ export async function POST(req: Request) {
         const genreContext = genrePrompts[novel.genre as keyof typeof genrePrompts] ||
             "You are a skilled storyteller, adept at crafting engaging narratives.";
 
+        // Fetch last 10 chapters for context
+        const { data: previousChapters, error: chaptersError } = await supabase
+            .from("chapters")
+            .select('*')
+            .eq('novel_id', novelId)
+            .order('chapter_number', { ascending: false })
+            .limit(10);
+
+        if (chaptersError) {
+            console.error("[POST] Error fetching previous chapters:", chaptersError);
+            return NextResponse.json(
+                { error: "Failed to fetch previous chapters" },
+                { status: 500 }
+            );
+        }
+
+        // Get the last 5 chapters' full content and all 10 chapters' metadata
+        const lastFiveChapters = previousChapters.slice(0, 5).reverse();
+        const lastTenChapters = previousChapters.reverse();
+
+        // Build the chapter history context
+        const chapterHistoryContext = `
+Previous Chapter History:
+
+${lastFiveChapters.map(chapter => `
+Chapter ${chapter.chapter_number}: "${chapter.title}"
+Full Content:
+${chapter.content || 'No content available'}
+`).join('\n')}
+
+Extended Chapter History (Last 10 Chapters):
+${lastTenChapters.map(chapter => {
+            const metadata = chapter.metadata || {};
+            const plotPoints = metadata.plot_points || [];
+            const characterArcs = metadata.character_arcs || {};
+            const characterRelationships = metadata.character_relationships || {};
+
+            return `
+Chapter ${chapter.chapter_number}: "${chapter.title}"
+Summary: ${chapter.summary || 'No summary available'}
+Plot Points:
+${plotPoints.length > 0 ? plotPoints.map((point: string) => `- ${point}`).join('\n') : '- No plot points available'}
+Character Arcs:
+${Object.keys(characterArcs).length > 0
+                    ? Object.entries(characterArcs).map(([char, arc]) => `- ${char}: ${arc}`).join('\n')
+                    : '- No character arcs available'}
+Character Relationships:
+${Object.keys(characterRelationships).length > 0
+                    ? Object.entries(characterRelationships).map(([rel, status]) => `- ${rel}: ${status}`).join('\n')
+                    : '- No character relationships available'}
+Story Direction: ${metadata.story_direction || 'No story direction available'}
+`}).join('\n')}`;
+
         const contextPrompt = `You are tasked with generating Chapter ${chapterNumber} for a ${novel.genre} novel titled "${novel.title}".
 
 Novel Description: ${novel.description}
 
-${previousChapter ? `Previous Chapter Summary: ${previousChapter.summary}
-
-This new chapter should naturally follow from these events.` : "This is the first chapter of the novel."}
+${previousChapters.length > 0 ? chapterHistoryContext : "This is the first chapter of the novel."}
 
 User's Request for this chapter: ${prompt}
 
 Important Guidelines:
 1. Maintain consistency with the novel's ${novel.genre} genre and established style
-2. Advance the plot in an engaging way that follows from previous events
-3. Include meaningful character interactions and development
-4. Create vivid scenes with descriptive details
-5. Write natural dialogue that reveals character personalities
+2. Ensure continuity with previous chapters' plot points and character development
+3. Reference and build upon existing character relationships and arcs
+4. Address ongoing plot threads and story direction
+5. Create vivid scenes with descriptive details
+6. Write natural dialogue that reveals character personalities
+7. Maintain consistency with previously established character traits and relationships
 
 You must respond with a complete JSON object in this exact format:
 {
     "title": "A descriptive chapter title",
     "content": "The complete chapter content with proper paragraphs and dialogue",
-    "summary": "A 2-3 sentence summary of the key events in this chapter"
+    "summary": "A 2-3 sentence summary of the key events in this chapter",
+    "plotPoints": [
+        "List of major plot developments in this chapter",
+        "Each point should be significant to the overall story"
+    ],
+    "characterArcs": [
+        {
+            "character": "characterName",
+            "development": "How this character developed or changed in this chapter"
+        },
+        {
+            "character": "anotherCharacter",
+            "development": "Their development in this chapter"
+        }
+    ],
+    "characterRelationships": [
+        {
+            "characters": "character1_character2",
+            "development": "How their relationship evolved or changed"
+        },
+        {
+            "characters": "character3_character4",
+            "development": "State of their relationship after this chapter"
+        }
+    ],
+    "storyDirection": "A brief analysis of where the story is heading after this chapter and potential future developments"
 }
 
 The content should be a complete chapter with a clear beginning, middle, and end.
 Do not truncate or cut off the content.
 Include proper paragraph breaks using \\n.
 Use proper quotation marks for dialogue.
-Do not include any text before or after the JSON object.`;
+Ensure the new chapter logically follows from the previous chapters' events and maintains story continuity.
+After completing the JSON object, write ###END###`;
 
         // 6. Generate the chapter content with retries
         console.log("[POST] Starting chapter generation");
@@ -180,6 +277,22 @@ Do not include any text before or after the JSON object.`;
 
         // 7. Save to database
         console.log("[POST] Saving chapter to database");
+
+        // Ensure metadata fields are properly structured
+        const chapterMetadata = {
+            generated_from_prompt: prompt,
+            ai_model: "gemini-2.0-flash-thinking-exp-01-21",
+            generation_attempts: 1,
+            plot_points: Array.isArray(chapterData.plotPoints) ? chapterData.plotPoints : [],
+            character_arcs: Array.isArray(chapterData.characterArcs) ? chapterData.characterArcs : [],
+            character_relationships: Array.isArray(chapterData.characterRelationships) ? chapterData.characterRelationships : [],
+            story_direction: typeof chapterData.storyDirection === 'string' ?
+                chapterData.storyDirection.trim() : 'Story direction not provided'
+        };
+
+        // Log the metadata for debugging
+        console.log("[POST] Chapter metadata:", JSON.stringify(chapterMetadata, null, 2));
+
         const { data: chapter, error: insertError } = await supabase
             .from("chapters")
             .insert([
@@ -192,11 +305,7 @@ Do not include any text before or after the JSON object.`;
                     version: 1,
                     word_count: chapterData.content.split(/\s+/).length,
                     is_published: false,
-                    metadata: {
-                        generated_from_prompt: prompt,
-                        ai_model: "gemini-pro",
-                        generation_attempts: 1,
-                    },
+                    metadata: chapterMetadata,
                 },
             ])
             .select()

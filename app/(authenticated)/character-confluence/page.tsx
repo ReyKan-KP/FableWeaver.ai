@@ -7,7 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Users, Loader2, Check, Search, Sparkles } from "lucide-react";
+import {
+  Plus,
+  Users,
+  Loader2,
+  Check,
+  Search,
+  Sparkles,
+  HelpCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,6 +29,11 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import CharacterConfluenceLoading from "./loading";
+import Image from "next/image";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
+
+const supabase = createBrowserSupabaseClient();
+
 interface User {
   id: string;
   name: string;
@@ -53,6 +66,39 @@ interface AvailableData {
   users: User[];
 }
 
+async function getProfileImageUrl(senderId: string): Promise<string> {
+  const { data, error } = await supabase
+    .from("character_profiles")
+    .select("image_url")
+    .eq("id", senderId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching profile image:", error);
+    return "";
+  }
+
+  return data?.image_url || "";
+}
+
+async function getUserImageUrl(senderId: string): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from("user")
+      .select("avatar_url")
+      .eq("user_id", senderId)
+      .single();
+
+    if (error || !data?.avatar_url) {
+      return "/images/default-avatar.png";
+    }
+
+    return data.avatar_url;
+  } catch {
+    return "/images/default-avatar.png";
+  }
+}
+
 export default function CharacterConfluence() {
   const { data: session } = useSession();
   const [groups, setGroups] = useState<GroupChat[]>([]);
@@ -62,6 +108,7 @@ export default function CharacterConfluence() {
   });
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -69,6 +116,10 @@ export default function CharacterConfluence() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
   const { toast } = useToast();
+  const [characterImages, setCharacterImages] = useState<
+    Record<string, string>
+  >({});
+  const [userImages, setUserImages] = useState<Record<string, string>>({});
 
   const fetchData = useCallback(async () => {
     try {
@@ -105,6 +156,45 @@ export default function CharacterConfluence() {
       fetchData();
     }
   }, [session?.user?.id, fetchData]);
+
+  useEffect(() => {
+    const loadCharacterImages = async () => {
+      const characterIds = groups.flatMap(
+        (group) =>
+          group.character_names?.map((_, idx) => group.characters_id[idx]) || []
+      );
+      const uniqueCharacterIds = Array.from(new Set(characterIds));
+
+      for (const id of uniqueCharacterIds) {
+        if (id && !characterImages[id]) {
+          const imageUrl = await getProfileImageUrl(id);
+          setCharacterImages((prev) => ({
+            ...prev,
+            [id]: imageUrl || "/images/default-character.png",
+          }));
+        }
+      }
+    };
+
+    const loadUserImages = async () => {
+      const userIds = groups.flatMap(
+        (group) => group.user_names?.map((_, idx) => group.users_id[idx]) || []
+      );
+      const uniqueUserIds = Array.from(new Set(userIds));
+
+      for (const id of uniqueUserIds) {
+        if (id && !userImages[id]) {
+          const imageUrl = await getUserImageUrl(id);
+          setUserImages((prev) => ({ ...prev, [id]: imageUrl }));
+        }
+      }
+    };
+
+    if (groups.length > 0) {
+      loadCharacterImages();
+      loadUserImages();
+    }
+  }, [groups]);
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
@@ -216,13 +306,23 @@ export default function CharacterConfluence() {
         className="mb-8"
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
-              Character Confluence
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
-              Create and manage your character group chats
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
+                Character Confluence
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
+                Create and manage your character group chats
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsHelpDialogOpen(true)}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <HelpCircle className="w-6 h-6" />
+            </motion.button>
           </div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -410,50 +510,106 @@ export default function CharacterConfluence() {
             key={group.id}
             variants={item}
             whileHover={{ scale: 1.02 }}
-            className="bg-[#bccff1] dark:bg-zinc-900 rounded-xl shadow-md overflow-hidden hover:shadow-xl 
-            transition-all duration-300 border border-gray-100 dark:border-gray-700"
+            className="rounded-xl shadow-md overflow-hidden hover:shadow-xl 
+            transition-all duration-300 border text-primary bg-background"
           >
             <Link href={`/character-confluence/${group.session_id}`}>
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5" />
-                      {group.group_name}
-                    </div>
-                    <span
-                      className={cn(
-                        "px-2 py-1 text-xs rounded-full",
-                        group.is_active
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                          : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300"
-                      )}
-                    >
-                      {group.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {group.character_count} Characters • {group.user_count}{" "}
-                      Users
-                    </p>
-                    {group.character_names && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Characters: {group.character_names.join(", ")}
-                      </p>
+              <Card className="h-full bg-transparent border-none p-4">
+                <div className="space-y-2">
+                  {/* Combined Avatar Stack */}
+                  <div className="flex -space-x-3">
+                    {[
+                      ...(group.character_names || [])
+                        .slice(0, 2)
+                        .map((name, idx) => ({
+                          name,
+                          type: "character",
+                          id: group.characters_id[idx],
+                          idx,
+                        })),
+                      ...(group.user_names || [])
+                        .slice(0, 2)
+                        .map((name, idx) => ({
+                          name,
+                          type: "user",
+                          id: group.users_id[idx],
+                          idx,
+                        })),
+                    ].map((item) => (
+                      <div
+                        key={`${item.type}-${item.idx}`}
+                        className="w-8 h-8 rounded-full border-2 border-[#0F0F0F] overflow-hidden"
+                      >
+                        <Image
+                          src={
+                            item.type === "character"
+                              ? characterImages[item.id] ||
+                                "/images/default-character.png"
+                              : userImages[item.id] ||
+                                "/images/default-avatar.png"
+                          }
+                          alt={item.name}
+                          width={32}
+                          height={32}
+                          className={cn(
+                            "w-full h-full object-cover",
+                            item.type === "character"
+                              ? "bg-blue-500/20"
+                              : "bg-purple-500/20"
+                          )}
+                        />
+                      </div>
+                    ))}
+                    {(group.character_names?.length || 0) +
+                      (group.user_names?.length || 0) >
+                      4 && (
+                      <div className="w-8 h-8 rounded-full border-2 border-[#0F0F0F] bg-gray-800 flex items-center justify-center">
+                        <span className="text-xs font-medium text-gray-400">
+                          +
+                          {(group.character_names?.length || 0) +
+                            (group.user_names?.length || 0) -
+                            4}
+                        </span>
+                      </div>
                     )}
-                    {group.user_names && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Users: {group.user_names.join(", ")}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Created {new Date(group.created_at).toLocaleDateString()}
-                    </p>
                   </div>
-                </CardContent>
+
+                  {/* Group Name and Info */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className=" text-base font-medium">
+                        {group.group_name}
+                      </h3>
+                      <div
+                        className={cn(
+                          "flex items-center gap-1.5 text-xs",
+                          group.is_active ? "text-green-400" : "text-gray-500"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "w-2 h-2 rounded-full animate-pulse",
+                            group.is_active ? "bg-green-400" : "bg-gray-500"
+                          )}
+                        />
+                        <span className="font-medium">
+                          {group.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        <span>{group.user_count} Users</span>
+                      </div>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <Sparkles className="w-4 h-4" />
+                        <span>{group.character_count} Characters</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </Card>
             </Link>
           </motion.div>
@@ -483,6 +639,70 @@ export default function CharacterConfluence() {
           </div>
         </motion.div>
       )}
+
+      {/* Help Dialog */}
+      <Dialog open={isHelpDialogOpen} onOpenChange={setIsHelpDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
+              How Character Confluence Works
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                What is Character Confluence?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Character Confluence is a unique feature that allows you to
+                create and manage group chats between different characters.
+                Think of it as a virtual roundtable where your favorite
+                characters can interact with each other!
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Key Features
+              </h3>
+              <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                <li>Create group chats with multiple characters</li>
+                <li>Invite other users to join your character groups</li>
+                <li>Engage in dynamic conversations between characters</li>
+                <li>Search and filter your group chats</li>
+                <li>Track active and inactive group sessions</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                How to Use
+              </h3>
+              <ol className="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                <li>
+                  Click &quot;Create New Group&quot; to start a new character
+                  group chat
+                </li>
+                <li>Select characters and users you want to include</li>
+                <li>Give your group a memorable name</li>
+                <li>Start the conversation and watch the magic happen!</li>
+              </ol>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Tips
+              </h3>
+              <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                <li>Use the search bar to quickly find specific groups</li>
+                <li>Filter between all, active, and inactive groups</li>
+                <li>Click on any group card to join the conversation</li>
+                <li>Manage your groups easily with the provided controls</li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

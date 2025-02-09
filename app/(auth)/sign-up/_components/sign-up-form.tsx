@@ -71,7 +71,7 @@ export function SignUpForm() {
       }
 
       toast.success("Account created successfully!");
-      router.push("/weave-anime");
+      router.push("/character-realm");
       router.refresh();
     } catch (error) {
       toast.error((error as Error).message);
@@ -84,7 +84,7 @@ export function SignUpForm() {
     setLoading(true);
     try {
       await signIn("google", {
-        callbackUrl: "/weave-anime",
+        callbackUrl: "/character-realm",
       });
     } catch (error) {
       toast.error("Failed to sign in with Google");

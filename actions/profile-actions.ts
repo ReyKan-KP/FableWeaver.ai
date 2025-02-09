@@ -70,5 +70,86 @@ export async function updateProfile(formData: FormData) {
     }
 }
 
+export async function updateUserPreferences(
+    writingGoals: { daily_words: number; weekly_stories: number },
+    theme: string = 'system',
+    emailNotifications: boolean = true
+) {
+    try {
+        const session = await getServerSession(authOptions)
+        if (!session?.user?.id) throw new Error('Not authenticated')
+
+        const supabase = createServerSupabaseClient()
+
+        const { error } = await supabase
+            .from('user_preferences')
+            .upsert({
+                user_id: session.user.id,
+                theme,
+                email_notifications: emailNotifications,
+                writing_goals: writingGoals
+            })
+
+        if (error) throw error
+
+        revalidatePath('/profile')
+        return { success: true }
+    } catch (error) {
+        return { error: (error as Error).message }
+    }
+}
+
+export async function logUserActivity(type: string, description: string, metadata: any = {}) {
+    try {
+        const session = await getServerSession(authOptions)
+        if (!session?.user?.id) throw new Error('Not authenticated')
+
+        const supabase = createServerSupabaseClient()
+
+        const { error } = await supabase
+            .from('user_activity')
+            .insert({
+                user_id: session.user.id,
+                type,
+                description,
+                metadata
+            })
+
+        if (error) throw error
+
+        return { success: true }
+    } catch (error) {
+        return { error: (error as Error).message }
+    }
+}
+
+export async function updateUserStatistics(
+    updates: {
+        stories_count?: number;
+        chapters_count?: number;
+        characters_count?: number;
+        total_words?: number;
+    }
+) {
+    try {
+        const session = await getServerSession(authOptions)
+        if (!session?.user?.id) throw new Error('Not authenticated')
+
+        const supabase = createServerSupabaseClient()
+
+        const { error } = await supabase
+            .from('user_statistics')
+            .update(updates)
+            .eq('user_id', session.user.id)
+
+        if (error) throw error
+
+        revalidatePath('/profile')
+        return { success: true }
+    } catch (error) {
+        return { error: (error as Error).message }
+    }
+}
+
 
 

@@ -52,8 +52,9 @@ export function SignInForm() {
       }
 
       toast.success("Signed in successfully!");
-      router.push("/weave-anime");
+      router.push("/character-realm");
       router.refresh();
+
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
@@ -65,7 +66,7 @@ export function SignInForm() {
     setLoading(true);
     try {
       await signIn("google", {
-        callbackUrl: "/weave-anime",
+        callbackUrl: "/character-realm",
       });
     } catch (error) {
       toast.error("Failed to sign in with Google");

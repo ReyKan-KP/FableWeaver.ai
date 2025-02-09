@@ -4,38 +4,68 @@
 
 @layer base {
   :root {
-    --background: 220, 96%, 91%;
-    --foreground: 240 6.7% 8.6%;
-    --primary: 244, 8%, 65%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 0 0% 98%;
-    --accent: 168 84% 45%;
+    /* Base colors - Lighter, cooler background with improved contrast */
+    --background: 220 30% 97%;
+    --foreground: 220 50% 15%;
+
+    /* UI element colors - More distinct from background */
+    --card: 220 25% 95%;
+    --card-foreground: 220 45% 15%;
+    --popover: 220 30% 96%;
+    --popover-foreground: 220 45% 15%;
+
+    /* Interactive elements - More vibrant primary, softer secondary */
+    --primary: 222 83% 55%;
+    --primary-foreground: 220 100% 98%;
+    --secondary: 220 35% 85%;
+    --secondary-foreground: 220 50% 15%;
+    --muted: 220 25% 90%;
+    --muted-foreground: 220 35% 45%;
+
+    /* Accent and functional - Warmer accent for contrast */
+    --accent: 266 25% 30%;
     --accent-foreground: 0 0% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
-    --border: 214.3 31.8% 91.4%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 6.7% 8.6%;
-    --from-purple: 270, 100%, 95%;
-    --via-blue: 210, 100%, 95%;
-    --to-teal: 180, 100%, 90%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Border and ring - Subtle but visible */
+    --border: 220 25% 85%;
+    --input: 220 25% 85%;
+    --ring: 222 83% 55%;
+
+    /* Radius */
+    --radius: 0.5rem;
   }
 
   .dark {
-    --background: 266, 16%, 8%;
+    /* Base colors - Rich dark purple background */
+    --background: 266 20% 10%;
     --foreground: 0 0% 98%;
-    --primary: 259 94% 71%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 217 91% 70%;
-    --secondary-foreground: 0 0% 98%;
-    --accent: 168 84% 55%;
-    --accent-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --border: 240 3.7% 15.9%;
-    --card: 266, 16%, 8%;
+
+    /* UI elements - Slightly lighter than background */
+    --card: 266 18% 12%;
     --card-foreground: 0 0% 98%;
+    --popover: 266 18% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Interactive elements - Vibrant purple primary */
+    --primary: 259 85% 75%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 266 30% 25%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 266 20% 20%;
+    --muted-foreground: 220 20% 75%;
+
+    /* Accent and functional - Softer accent */
+    --accent: 266 25% 30%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Border and ring - More visible in dark mode */
+    --border: 266 25% 20%;
+    --input: 266 25% 20%;
+    --ring: 259 85% 75%;
   }
 }
 

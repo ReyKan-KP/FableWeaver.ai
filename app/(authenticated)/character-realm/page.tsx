@@ -14,11 +14,18 @@ import {
   Pencil,
   Trash2,
   Info,
+  HelpCircle,
 } from "lucide-react";
 import Image from "next/image";
 import type { Message, Character } from "@/types/chat";
 import { cn } from "@/lib/utils";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import {
@@ -48,6 +55,7 @@ export default function CharactersPage() {
   const [characterToDelete, setCharacterToDelete] = useState<Character | null>(
     null
   );
+  const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const { data: session, status } = useSession();
   const user = session?.user;
   const router = useRouter();
@@ -74,8 +82,8 @@ export default function CharactersPage() {
       filter === "all"
         ? character.is_public || character.creator_id === user?.id
         : filter === "mine"
-        ? character.creator_id === user?.id
-        : character.is_public;
+          ? character.creator_id === user?.id
+          : character.is_public;
 
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch =
@@ -157,13 +165,23 @@ export default function CharactersPage() {
         className="mb-8"
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
-              Character Realm
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
-              Discover and interact with unique characters
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
+                Character Realm
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
+                Discover and interact with unique characters
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsHelpDialogOpen(true)}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <HelpCircle className="w-6 h-6" />
+            </motion.button>
           </div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -406,6 +424,96 @@ export default function CharactersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Help Dialog */}
+      <Dialog open={isHelpDialogOpen} onOpenChange={setIsHelpDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
+              How Character Realm Works
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                What is Character Realm?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Character Realm is your gateway to creating, discovering, and
+                interacting with a diverse collection of characters. Here, you
+                can bring your favorite characters to life and engage in
+                one-on-one conversations with them!
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Key Features
+              </h3>
+              <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                <li>
+                  Create detailed character profiles with images and
+                  descriptions
+                </li>
+                <li>
+                  Add example dialogues to capture character personalities
+                </li>
+                <li>Choose between public and private character visibility</li>
+                <li>
+                  Browse and interact with characters created by other users
+                </li>
+                <li>
+                  Manage your character collection with easy editing tools
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                How to Use
+              </h3>
+              <ol className="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                <li>
+                  Click &quot;Weave New Character&quot; to create a character
+                </li>
+                <li>
+                  Fill in the character details, including name, description,
+                  and source
+                </li>
+                <li>
+                  Add an image and example dialogues to bring your character to
+                  life
+                </li>
+                <li>Choose whether to make your character public or private</li>
+                <li>
+                  Click &quot;Chat Now&quot; on any character card to start a
+                  conversation
+                </li>
+              </ol>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Tips
+              </h3>
+              <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                <li>Use the search bar to find specific characters</li>
+                <li>Filter between all, public, and your own characters</li>
+                <li>
+                  Add multiple content types to categorize your characters
+                </li>
+                <li>
+                  Include a Fandom URL for additional character information
+                </li>
+                <li>
+                  Use example dialogues to define your character&apos;s speaking
+                  style
+                </li>
+              </ul>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

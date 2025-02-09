@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/navbar";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Toaster2 } from "sonner";
 import { Inter } from "next/font/google";
 import AuthProvider from "@/components/providers/session-provider";
 import "./globals.css";
@@ -35,6 +36,7 @@ export default async function RootLayout({
             <AnimatedGradient />
             <main className="pt-28">
               <Toaster />
+              <Toaster2 />
               {children}
             </main>
             <footer className="mt-auto">

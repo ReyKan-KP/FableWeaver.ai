@@ -84,13 +84,32 @@ export async function POST(req: Request) {
         let currentY = 40;
         let currentPage = 3; // Start from page 3 (after title and TOC)
 
-        chapters.forEach((chapter) => {
+        // Calculate estimated pages for each chapter
+        const chapterPages = chapters.map(chapter => {
+            const titleLines = 2; // Chapter number and title
+            const summaryLines = chapter.summary
+                ? doc.splitTextToSize(chapter.summary, doc.internal.pageSize.width - 40).length
+                : 0;
+            const contentLines = chapter.content
+                ? doc.splitTextToSize(chapter.content.trim(), doc.internal.pageSize.width - 40).length
+                : 0;
+
+            // Calculate total lines and convert to pages
+            // Assuming ~40 lines per page (with margins)
+            const totalLines = titleLines + summaryLines + contentLines;
+            return Math.ceil(totalLines / 40);
+        });
+
+        // Update TOC with calculated page numbers
+        let runningPage = 3; // Start from page 3
+        chapters.forEach((chapter, index) => {
             doc.setFontSize(12);
             const title = `Chapter ${chapter.chapter_number}: ${chapter.title}`;
             doc.text(title, 20, currentY);
-            doc.text(currentPage.toString(), doc.internal.pageSize.width - 25, currentY);
+            doc.text(runningPage.toString(), doc.internal.pageSize.width - 25, currentY);
             currentY += 10;
-            currentPage += 2; // Estimate 2 pages per chapter
+
+            runningPage += chapterPages[index];
 
             if (currentY > doc.internal.pageSize.height - 20) {
                 doc.addPage();
@@ -110,34 +129,41 @@ export async function POST(req: Request) {
             doc.text(chapter.title, doc.internal.pageSize.width / 2, 30, { align: "center" });
 
             let contentY = 50;
+            const pageWidth = doc.internal.pageSize.width - 40; // Margins on both sides
+            const pageHeight = doc.internal.pageSize.height - 20; // Bottom margin
+            const lineHeight = 7; // Height per line in mm
 
             // Chapter summary
             if (chapter.summary) {
                 doc.setFontSize(12);
                 doc.setFont("helvetica", "italic");
-                const summaryLines = addWrappedText(
-                    chapter.summary,
-                    20,
-                    contentY,
-                    doc.internal.pageSize.width - 40
-                );
-                contentY += (summaryLines * 7) + 10;
+                const summaryLines = doc.splitTextToSize(chapter.summary, pageWidth);
+
+                for (let i = 0; i < summaryLines.length; i++) {
+                    if (contentY > pageHeight) {
+                        doc.addPage();
+                        contentY = 20;
+                    }
+                    doc.text(summaryLines[i], 20, contentY);
+                    contentY += lineHeight;
+                }
+
+                contentY += 10; // Extra space after summary
                 doc.setFont("helvetica", "normal");
             }
 
             // Chapter content
             if (chapter.content) {
                 doc.setFontSize(12);
-                const contentLines = addWrappedText(
-                    chapter.content.trim(),
-                    20,
-                    contentY,
-                    doc.internal.pageSize.width - 40
-                );
+                const contentLines = doc.splitTextToSize(chapter.content.trim(), pageWidth);
 
-                // Add new page if content is too long
-                if (contentY + (contentLines * 7) > doc.internal.pageSize.height - 20) {
-                    doc.addPage();
+                for (let i = 0; i < contentLines.length; i++) {
+                    if (contentY > pageHeight) {
+                        doc.addPage();
+                        contentY = 20;
+                    }
+                    doc.text(contentLines[i], 20, contentY);
+                    contentY += lineHeight;
                 }
             }
         });

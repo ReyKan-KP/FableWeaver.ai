@@ -33,63 +33,90 @@ import {
   UsersRound,
   NotebookPen,
   Info,
+  BookOpen,
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileMenu } from "./mobile-menu";
 import { title } from "process";
 import Image from "next/image";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 const navItems = [
   {
-    title: "Home",
-    href: "/",
-    icon: House,
+    title: "Features",
+    href: "/features",
+    icon: Sparkles,
+    description: "Explore all the features FableWeaver.ai has to offer",
   },
   {
     title: "About",
     href: "/about",
     icon: Info,
+    description: "Learn more about FableWeaver.ai and our mission",
   },
-  {
-    title: "Weave Anime",
-    href: "/weave-anime",
-    icon: Wand2,
-  },
+  // {
+  //   title: "Weave Anime",
+  //   href: "/weave-anime",
+  //   icon: Wand2,
+  // },
   {
     title: "Character Realm",
     href: "/character-realm",
     icon: MessageSquareQuote,
+    description: "Create and manage your unique story characters",
   },
   {
     title: "Character Confluence",
     href: "/character-confluence",
     icon: UsersRound,
+    description: "Explore character interactions and relationships",
+  },
+  {
+    title: "Fable Trail",
+    href: "/fable-trail",
+    icon: BookOpen,
+    description: "Discover and read published stories from our community",
   },
   {
     title: "Story Weaver",
     href: "/story-weaver",
     icon: NotebookPen,
+    description: "Write and edit your stories with AI assistance",
   },
   {
     title: "Features",
     href: "#features",
     icon: Sparkles,
+    description: "Explore all the features FableWeaver.ai has to offer",
     items: [
       {
         title: "Character Realm",
         href: "/character-realm",
         icon: MessageSquareQuote,
+        description: "Create and manage your unique story characters",
       },
-
       {
         title: "Character Confluence",
         href: "/character-confluence",
         icon: UsersRound,
+        description: "Explore character interactions and relationships",
       },
-      { title: "Story Weaver", href: "/story-weaver", icon: NotebookPen },
+      {
+        title: "Story Weaver",
+        href: "/story-weaver",
+        icon: NotebookPen,
+        description: "Write and edit your stories with AI assistance",
+      },
       {
         title: "Weaving your story Recommendation",
         href: "/weave-anime",
         icon: Wand2,
+        description: "Get personalized story recommendations",
       },
     ],
   },
@@ -97,11 +124,13 @@ const navItems = [
     title: "Sign In",
     href: "/sign-in",
     icon: LogIn,
+    description: "Access your FableWeaver.ai account",
   },
   {
     title: "Sign Up",
     href: "/sign-up",
     icon: UserPlus,
+    description: "Create a new FableWeaver.ai account",
   },
 ];
 
@@ -187,37 +216,46 @@ export function Navbar() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Link
-                  href={item.href}
-                  className="flex items-center space-x-1 xl:space-x-2 text-xs xl:text-sm text-muted-foreground transition-colors hover:text-foreground group relative cursor-pointer font-semibold py-2 xl:py-3 rounded-full duration-300 hover:text-gray-900 dark:hover:text-white"
-                  onClick={() => setActiveTab(item.title)}
-                >
-                  {item.icon && (
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: 10 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="relative"
-                    >
-                      <motion.div
-                        className="absolute inset-0 bg-purple-400/20 dark:bg-purple-600/20 rounded-full blur-md"
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          opacity: [0, 0.2, 0],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      />
-                      <item.icon className="h-3 w-3 xl:h-4 xl:w-4 transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400" />
-                    </motion.div>
-                  )}
-                  <span className="hidden md:inline">{item.title}</span>
-                  {item.items && (
-                    <ChevronDown className="h-3 w-3 xl:h-4 xl:w-4 transition-transform duration-200 group-hover:rotate-180" />
-                  )}
-                </Link>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        className="flex items-center space-x-1 xl:space-x-2 text-xs xl:text-sm text-muted-foreground transition-colors hover:text-foreground group relative cursor-pointer font-semibold py-2 xl:py-3 rounded-full duration-300 hover:text-gray-900 dark:hover:text-white"
+                        onClick={() => setActiveTab(item.title)}
+                      >
+                        {item.icon && (
+                          <motion.div
+                            whileHover={{ scale: 1.2, rotate: 10 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="relative"
+                          >
+                            <motion.div
+                              className="absolute inset-0 bg-purple-400/20 dark:bg-purple-600/20 rounded-full blur-md"
+                              animate={{
+                                scale: [1, 1.2, 1],
+                                opacity: [0, 0.2, 0],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut",
+                              }}
+                            />
+                            <item.icon className="h-3 w-3 xl:h-4 xl:w-4 transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400" />
+                          </motion.div>
+                        )}
+                        <span className="hidden md:inline">{item.title}</span>
+                        {item.items && (
+                          <ChevronDown className="h-3 w-3 xl:h-4 xl:w-4 transition-transform duration-200 group-hover:rotate-180" />
+                        )}
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{item.description}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </motion.div>
 
               {/* Anime Mascot - Only show on larger screens */}
@@ -378,21 +416,29 @@ export function Navbar() {
                   className="absolute rounded-full left-0 top-full mt-2 w-36 xl:w-48 border bg-background/80 p-2 backdrop-blur-lg"
                 >
                   {item.items.map((subItem) => (
-                    <Link
-                      key={subItem.title}
-                      href={subItem.href}
-                      className="flex items-center space-x-2 rounded-md px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground group"
-                    >
-                      {subItem.icon && (
-                        <motion.div
-                          whileHover={{ scale: 1.2, rotate: 10 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <subItem.icon className="h-4 w-4 transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400" />
-                        </motion.div>
-                      )}
-                      <span>{subItem.title}</span>
-                    </Link>
+                    <TooltipProvider key={subItem.title}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={subItem.href}
+                            className="flex items-center space-x-2 rounded-md px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground group"
+                          >
+                            {subItem.icon && (
+                              <motion.div
+                                whileHover={{ scale: 1.2, rotate: 10 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <subItem.icon className="h-4 w-4 transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400" />
+                              </motion.div>
+                            )}
+                            <span>{subItem.title}</span>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{subItem.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ))}
                 </motion.div>
               )}
@@ -446,22 +492,31 @@ export function Navbar() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Link
-                      href={item.href}
-                      className="flex items-center space-x-1 xl:space-x-2 text-xs xl:text-sm text-muted-foreground transition-colors hover:text-foreground group relative cursor-pointer font-semibold py-2 xl:py-3 rounded-full duration-300 hover:text-gray-900 dark:hover:text-white"
-                      onClick={() => setActiveTab(item.title)}
-                    >
-                      {item.icon && (
-                        <motion.div
-                          whileHover={{ scale: 1.2, rotate: 10 }}
-                          whileTap={{ scale: 0.9 }}
-                          className="relative"
-                        >
-                          <item.icon className="h-3 w-3 xl:h-4 xl:w-4 transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400" />
-                        </motion.div>
-                      )}
-                      <span>{item.title}</span>
-                    </Link>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={item.href}
+                            className="flex items-center space-x-1 xl:space-x-2 text-xs xl:text-sm text-muted-foreground transition-colors hover:text-foreground group relative cursor-pointer font-semibold py-2 xl:py-3 rounded-full duration-300 hover:text-gray-900 dark:hover:text-white"
+                            onClick={() => setActiveTab(item.title)}
+                          >
+                            {item.icon && (
+                              <motion.div
+                                whileHover={{ scale: 1.2, rotate: 10 }}
+                                whileTap={{ scale: 0.9 }}
+                                className="relative"
+                              >
+                                <item.icon className="h-3 w-3 xl:h-4 xl:w-4 transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400" />
+                              </motion.div>
+                            )}
+                            <span>{item.title}</span>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{item.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </motion.div>
                 </div>
               ))}
