@@ -638,7 +638,13 @@ export default function NovelView() {
                                 });
                               }
                             }}
+                            disabled={!novel.is_public}
                           />
+                          {novel.is_published && !novel.is_public && (
+                            <span className="text-xs text-yellow-600 dark:text-yellow-500 ml-2">
+                              Waiting for admin approval to make public
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <label className="text-sm">Published:</label>

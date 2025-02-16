@@ -281,7 +281,7 @@ export default function StoryWeaver() {
       formData.append("title", newNovel.title);
       formData.append("genre", newNovel.genre);
       formData.append("description", newNovel.description);
-      formData.append("is_public", String(newNovel.is_public));
+      formData.append("is_public", "false");
 
       if (novelImage) {
         formData.append("cover_image", novelImage);
@@ -311,13 +311,18 @@ export default function StoryWeaver() {
         setNovels(novels.map((n) => (n.id === editingNovel.id ? data : n)));
       } else {
         setNovels([data, ...novels]);
+        toast({
+          title: "Novel created",
+          description:
+            "Your novel has been created successfully. Once you publish it, an admin will review it to make it public.",
+        });
       }
 
       setNewNovel({
         title: "",
         genre: "fantasy",
         description: "",
-        is_public: true,
+        is_public: false,
         cover_image: "",
       });
       setNovelImage(null);
@@ -326,21 +331,11 @@ export default function StoryWeaver() {
       setIsDialogOpen(false);
       setIsEditDialogOpen(false);
       setEditingNovel(null);
-
-      toast({
-        title: editingNovel ? "Novel updated" : "Novel created",
-        description: editingNovel
-          ? "Your novel has been successfully updated."
-          : "Your new novel has been created successfully.",
-      });
     } catch (error) {
       console.error("Error saving novel:", error);
       toast({
         title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to save novel. Please try again.",
+        description: "Failed to save novel",
         variant: "destructive",
       });
     } finally {

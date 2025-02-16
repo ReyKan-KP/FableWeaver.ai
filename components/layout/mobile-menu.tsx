@@ -169,6 +169,20 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                   </p>
                 </div>
               </div>
+              <Link
+                href={session?.user?.role === "admin" ? "/admin" : "/profile"}
+                onClick={() => setIsMenuOpen(false)}
+                className="block"
+              >
+                <Button
+                  variant="outline"
+                  className="w-full h-10 sm:h-11 md:h-12 text-sm sm:text-base"
+                >
+                  {session?.user?.role === "admin"
+                    ? "Admin Dashboard"
+                    : "Profile"}
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 className="w-full h-10 sm:h-11 md:h-12 text-sm sm:text-base"

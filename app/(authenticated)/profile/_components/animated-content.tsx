@@ -36,6 +36,9 @@ import {
   Edit,
   Plus,
   Info,
+  BookmarkIcon,
+  MessageSquare,
+  BarChart2,
 } from "lucide-react";
 import { ProfileForm } from "./profile-form";
 import { formatDistanceToNow } from "date-fns";
@@ -156,6 +159,38 @@ interface GroupChat {
   last_message_at: string;
 }
 
+interface ReadingAnalytics {
+  totalBooksRead: number;
+  inProgressBooks: number;
+  totalBookmarks: number;
+  totalComments: number;
+  averageProgress: number;
+  readingHistory: Array<{
+    date: string;
+    progress: number;
+  }>;
+  commentActivity: Array<{
+    date: string;
+    comments: number;
+    reactions: number;
+    likes: number;
+    dislikes: number;
+  }>;
+  readingStatusDistribution: {
+    completed: number;
+    reading: number;
+    onHold: number;
+    dropped: number;
+    planToRead: number;
+  };
+  bookmarkActivity: Array<{
+    date: string;
+    count: number;
+    withNotes: number;
+  }>;
+  lastReadAt: string | null;
+}
+
 interface AnimatedContentProps {
   user: {
     id: string;
@@ -164,6 +199,7 @@ interface AnimatedContentProps {
     image: string;
   };
   statistics: Statistics;
+  readingAnalytics: ReadingAnalytics;
   recentStories: Story[];
   recentActivity: Activity[];
   preferences: UserPreferences;
@@ -348,9 +384,171 @@ function WordsProgressChart({ statistics }: { statistics: Statistics }) {
   );
 }
 
+function ReadingProgressChart({
+  readingAnalytics,
+}: {
+  readingAnalytics: ReadingAnalytics;
+}) {
+  return (
+    <div style={{ width: "100%", height: 300 }}>
+      <ResponsiveContainer>
+        <AreaChart data={readingAnalytics.readingHistory}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <RechartsTooltip />
+          <Area
+            type="monotone"
+            dataKey="progress"
+            stroke="hsl(var(--primary))"
+            fill="hsl(var(--primary))"
+            fillOpacity={0.3}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function ReadingStatusChart({
+  readingAnalytics,
+}: {
+  readingAnalytics: ReadingAnalytics;
+}) {
+  const data = [
+    {
+      name: "Completed",
+      value: readingAnalytics.readingStatusDistribution.completed,
+    },
+    {
+      name: "Reading",
+      value: readingAnalytics.readingStatusDistribution.reading,
+    },
+    {
+      name: "On Hold",
+      value: readingAnalytics.readingStatusDistribution.onHold,
+    },
+    {
+      name: "Dropped",
+      value: readingAnalytics.readingStatusDistribution.dropped,
+    },
+    {
+      name: "Plan to Read",
+      value: readingAnalytics.readingStatusDistribution.planToRead,
+    },
+  ];
+
+  return (
+    <div style={{ width: "100%", height: 300 }}>
+      <ResponsiveContainer>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={100}
+            label
+          >
+            {data.map((entry, index) => (
+              <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Legend />
+          <RechartsTooltip />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function BookmarkActivityChart({
+  readingAnalytics,
+}: {
+  readingAnalytics: ReadingAnalytics;
+}) {
+  return (
+    <div style={{ width: "100%", height: 300 }}>
+      <ResponsiveContainer>
+        <BarChartComponent data={readingAnalytics.bookmarkActivity}>
+          <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <RechartsTooltip
+            contentStyle={{
+              background: "hsl(var(--background))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "6px",
+            }}
+          />
+          <Legend />
+          <Bar
+            dataKey="count"
+            fill="hsl(var(--primary))"
+            name="Total Bookmarks"
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="withNotes"
+            fill="hsl(var(--secondary))"
+            name="With Notes"
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChartComponent>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function CommentActivityChart({
+  readingAnalytics,
+}: {
+  readingAnalytics: ReadingAnalytics;
+}) {
+  return (
+    <div style={{ width: "100%", height: 300 }}>
+      <ResponsiveContainer>
+        <BarChartComponent data={readingAnalytics.commentActivity}>
+          <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <RechartsTooltip
+            contentStyle={{
+              background: "hsl(var(--background))",
+              border: "1px solid hsl(var(--border))",
+              borderRadius: "6px",
+            }}
+          />
+          <Legend />
+          <Bar
+            dataKey="comments"
+            fill="hsl(var(--primary))"
+            name="Comments"
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="likes"
+            fill="hsl(var(--secondary))"
+            name="Likes"
+            radius={[4, 4, 0, 0]}
+          />
+          <Bar
+            dataKey="dislikes"
+            fill="hsl(var(--destructive))"
+            name="Dislikes"
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChartComponent>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 export function AnimatedContent({
   user,
   statistics,
+  readingAnalytics,
   recentStories,
   recentActivity,
   preferences,
@@ -581,6 +779,12 @@ export function AnimatedContent({
             className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-blue-600 data-[state=active]:to-teal-500 data-[state=active]:text-white"
           >
             Activity
+          </TabsTrigger>
+          <TabsTrigger
+            value="reading"
+            className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-blue-600 data-[state=active]:to-teal-500 data-[state=active]:text-white"
+          >
+            Reading
           </TabsTrigger>
         </TabsList>
 
@@ -1148,6 +1352,79 @@ export function AnimatedContent({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="reading" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              icon={<BookOpen className="h-4 w-4" />}
+              label="Total Books Read"
+              value={readingAnalytics.totalBooksRead}
+            />
+            <StatsCard
+              icon={<BarChart2 className="h-4 w-4" />}
+              label="In Progress"
+              value={readingAnalytics.inProgressBooks}
+            />
+            <StatsCard
+              icon={<BookmarkIcon className="h-4 w-4" />}
+              label="Bookmarks"
+              value={readingAnalytics.totalBookmarks}
+            />
+            <StatsCard
+              icon={<MessageSquare className="h-4 w-4" />}
+              label="Comments"
+              value={readingAnalytics.totalComments}
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Reading Status Distribution</CardTitle>
+                <CardDescription>
+                  Overview of your reading status across books
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReadingStatusChart readingAnalytics={readingAnalytics} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Reading Progress</CardTitle>
+                <CardDescription>
+                  Your reading progress over time
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReadingProgressChart readingAnalytics={readingAnalytics} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Bookmark Activity</CardTitle>
+                <CardDescription>Your bookmarks and notes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BookmarkActivityChart readingAnalytics={readingAnalytics} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Comment Activity</CardTitle>
+                <CardDescription>
+                  Your comments and interactions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CommentActivityChart readingAnalytics={readingAnalytics} />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </motion.div>

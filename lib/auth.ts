@@ -11,7 +11,12 @@ declare module "next-auth" {
       email?: string | null
       image?: string | null
       avatar_url?: string | null
+      role?: string | null
     }
+  }
+
+  interface User {
+    role?: string
   }
 }
 
@@ -56,7 +61,8 @@ export const authOptions: NextAuthOptions = {
                 user_name: profile.name,
                 user_email: profile.email,
                 user_watched_list: [],
-                avatar_url: profile.picture // Store Google avatar URL
+                avatar_url: profile.picture,
+                role: 'user'
               }
             ])
 
@@ -67,7 +73,8 @@ export const authOptions: NextAuthOptions = {
             name: profile.name,
             email: profile.email,
             image: profile.picture,
-            avatar_url: profile.picture
+            avatar_url: profile.picture,
+            role: 'user'
           }
         }
 
@@ -76,7 +83,8 @@ export const authOptions: NextAuthOptions = {
           name: existingUser.user_name,
           email: existingUser.user_email,
           image: existingUser.avatar_url,
-          avatar_url: existingUser.avatar_url
+          avatar_url: existingUser.avatar_url,
+          role: existingUser.role || 'user'
         }
       },
     }),
@@ -84,11 +92,24 @@ export const authOptions: NextAuthOptions = {
       name: 'credentials',
       credentials: {
         email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        isAdmin: { label: "Is Admin", type: "boolean" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Invalid credentials')
+        }
+
+        if (
+          credentials.email === process.env.NEXT_PUBLIC_FABLEWEAVER_ADMIN_EMAIL &&
+          credentials.password === process.env.NEXT_PUBLIC_FABLEWEAVER_ADMIN_PASSWORD
+        ) {
+          return {
+            id: 'admin',
+            email: credentials.email,
+            name: 'Admin',
+            role: 'admin'
+          }
         }
 
         const supabase = createServerSupabaseClient()
@@ -114,6 +135,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: userData?.user_name,
+          role: userData?.role || 'user'
         }
       }
     })
@@ -122,13 +144,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (trigger === "update" && session?.name) {
         token.name = session.name
-        token.picture = session.image // Update the picture in the token
+        token.picture = session.image
       }
 
       if (user) {
         token.id = user.id
         token.name = user.name
-        token.picture = user.image // Ensure picture is set from user object
+        token.picture = user.image
+        token.role = user.role
       }
       return token
     },
@@ -136,7 +159,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.name = token.name as string
-        session.user.image = token.picture as string // Set image from token
+        session.user.image = token.picture as string
+        session.user.role = token.role as string
       }
       return session
     }

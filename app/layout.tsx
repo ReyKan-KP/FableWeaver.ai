@@ -9,7 +9,9 @@ import Footer from "@/components/layout/footer";
 import { Analytics } from "@vercel/analytics/react";
 import { AnimatedGradient } from "@/components/ui/animated-gradient";
 import type { Metadata } from "next";
-
+import { updateLastSeen } from "@/lib/supabase";
+import { createServerSupabaseClient } from "@/lib/supabase";
+import { PostHogProvider } from "@/components/providers/posthog-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -22,15 +24,27 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Get the current user's session
+  const supabase = createServerSupabaseClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Update last_seen if user is logged in
+  if (session?.user?.id) {
+    await updateLastSeen(session.user.id);
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} transition-colors duration-300`}>
         <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
+          <PostHogProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
           >
             <Navbar />
             <AnimatedGradient />
@@ -43,7 +57,8 @@ export default async function RootLayout({
               <Footer />
             </footer>
             <Analytics />
-          </ThemeProvider>
+            </ThemeProvider>
+          </PostHogProvider>
         </AuthProvider>
       </body>
     </html>

@@ -648,7 +648,7 @@ const CreateCharacterForm = ({
         "dialogues",
         JSON.stringify(formData.dialogues.filter(Boolean))
       );
-      formDataToSend.append("is_public", formData.is_public.toString());
+      formDataToSend.append("is_public", "false");
 
       if (characterImage) {
         formDataToSend.append("character_image", characterImage);
@@ -680,7 +680,7 @@ const CreateCharacterForm = ({
           title: initialData ? "Character updated" : "Character created",
           description: initialData
             ? "Your character has been successfully updated."
-            : "Your new character has been created successfully.",
+            : "Your character has been created successfully. An admin will review it before making it public.",
         });
         onSuccess();
       }
@@ -961,21 +961,12 @@ const CreateCharacterForm = ({
           </motion.button>
         </div>
 
-        <motion.div
-          className="flex items-center gap-2"
-          whileHover={{ scale: 1.02 }}
-        >
-          <input
-            type="checkbox"
-            checked={formData.is_public}
-            onChange={(e) =>
-              setFormData({ ...formData, is_public: e.target.checked })
-            }
-            className="w-4 h-4 text-blue-500 dark:text-blue-400 border-gray-300 dark:border-gray-700 rounded focus:ring-blue-500 dark:focus:ring-blue-400"
-          />
-          <label className="text-gray-700 dark:text-gray-300">
-            Make this character public
-          </label>
+        <motion.div className="flex items-center gap-2 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+          <Info className="w-5 h-5 text-blue-500" />
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Your character will be private initially. Once created, you can
+            request admin approval to make it public.
+          </p>
         </motion.div>
       </motion.div>
 

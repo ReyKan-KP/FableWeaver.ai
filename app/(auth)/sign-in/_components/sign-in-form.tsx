@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -41,10 +41,19 @@ export function SignInForm() {
     setLoading(true);
 
     try {
+      const adminEmail = process.env.NEXT_PUBLIC_FABLEWEAVER_ADMIN_EMAIL;
+      const adminPassword = process.env.NEXT_PUBLIC_FABLEWEAVER_ADMIN_PASSWORD;
+
+      if (!adminEmail || !adminPassword) {
+        console.error("Admin credentials not properly configured");
+        throw new Error("Admin credentials not properly configured");
+      }
+
       const result = await signIn("credentials", {
         email: email,
         password: password,
         redirect: false,
+        isAdmin: email === adminEmail && password === adminPassword,
       });
 
       if (result?.error) {
@@ -52,9 +61,13 @@ export function SignInForm() {
       }
 
       toast.success("Signed in successfully!");
-      router.push("/character-realm");
-      router.refresh();
 
+      if (email === adminEmail && password === adminPassword) {
+        router.push("/admin");
+      } else {
+        router.push("/character-realm");
+      }
+      router.refresh();
     } catch (error) {
       toast.error((error as Error).message);
     } finally {

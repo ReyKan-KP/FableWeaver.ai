@@ -84,7 +84,7 @@ export async function POST(request: Request) {
                     description,
                     user_id: session.user.id,
                     cover_image: coverImageUrl,
-                    is_public: isPublic,
+                    is_public: false,
                     metadata,
                     chapter_count: 0,
                     total_words: 0,

@@ -21,6 +21,10 @@ export default async function ProfilePage() {
     { data: userStats },
     { data: createdGroups },
     { data: joinedGroups },
+    { data: readingProgress },
+    { data: readingStatus },
+    { data: userComments },
+    { data: userBookmarks },
   ] = await Promise.all([
     supabase
       .from("user")
@@ -81,6 +85,30 @@ export default async function ProfilePage() {
       .contains("users_id", [session.user.id])
       .neq("creator_id", session.user.id)
       .order("created_at", { ascending: false }),
+    // Fetch reading progress
+    supabase
+      .from("reading_progress")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("updated_at", { ascending: false }),
+    // Fetch reading status
+    supabase
+      .from("reading_status")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("updated_at", { ascending: false }),
+    // Fetch user comments
+    supabase
+      .from("chapter_comments")
+      .select("*, comment_reactions(*)")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false }),
+    // Fetch user bookmarks
+    supabase
+      .from("novel_bookmarks")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   // Process group data to include counts and last message time
@@ -105,6 +133,135 @@ export default async function ProfilePage() {
             : group.created_at,
       };
     }) || [];
+
+  // Process reading analytics data
+  const commentsByDate =
+    userComments?.reduce(
+      (
+        acc: {
+          [key: string]: {
+            date: string;
+            comments: number;
+            reactions: number;
+            likes: number;
+            dislikes: number;
+          };
+        },
+        comment
+      ) => {
+        const date = format(new Date(comment.created_at), "MMM dd");
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            comments: 0,
+            reactions: 0,
+            likes: 0,
+            dislikes: 0,
+          };
+        }
+        acc[date].comments += 1;
+        acc[date].reactions += comment.comment_reactions?.length || 0;
+        acc[date].likes += comment.likes_count || 0;
+        acc[date].dislikes += comment.dislikes_count || 0;
+        return acc;
+      },
+      {}
+    ) || {};
+
+  // Process reading progress by novel
+  const readingProgressByNovel =
+    readingProgress?.reduce(
+      (
+        acc: {
+          [key: string]: {
+            novel_id: string;
+            progress: number;
+            last_position: string;
+            last_updated: string;
+          }[];
+        },
+        progress
+      ) => {
+        if (!acc[progress.novel_id]) {
+          acc[progress.novel_id] = [];
+        }
+        acc[progress.novel_id].push({
+          novel_id: progress.novel_id,
+          progress: progress.progress_percentage,
+          last_position: progress.last_position,
+          last_updated: progress.updated_at,
+        });
+        return acc;
+      },
+      {}
+    ) || {};
+
+  // Get reading status statistics
+  const readingStatusStats = {
+    completed:
+      readingStatus?.filter((s) => s.status === "completed").length || 0,
+    reading: readingStatus?.filter((s) => s.status === "reading").length || 0,
+    onHold: readingStatus?.filter((s) => s.status === "on_hold").length || 0,
+    dropped: readingStatus?.filter((s) => s.status === "dropped").length || 0,
+    planToRead:
+      readingStatus?.filter((s) => s.status === "plan_to_read").length || 0,
+  };
+
+  // Process bookmarks with notes
+  const bookmarksByDate =
+    userBookmarks?.reduce(
+      (
+        acc: {
+          [key: string]: {
+            date: string;
+            count: number;
+            withNotes: number;
+          };
+        },
+        bookmark
+      ) => {
+        const date = format(new Date(bookmark.created_at), "MMM dd");
+        if (!acc[date]) {
+          acc[date] = {
+            date,
+            count: 0,
+            withNotes: 0,
+          };
+        }
+        acc[date].count += 1;
+        if (bookmark.note) {
+          acc[date].withNotes += 1;
+        }
+        return acc;
+      },
+      {}
+    ) || {};
+
+  const readingAnalytics = {
+    totalBooksRead: readingStatusStats.completed,
+    inProgressBooks: readingStatusStats.reading,
+    totalBookmarks: userBookmarks?.length || 0,
+    totalComments: userComments?.length || 0,
+    averageProgress: readingProgress
+      ? readingProgress.reduce(
+          (acc, curr) => acc + (curr.progress_percentage || 0),
+          0
+        ) / readingProgress.length
+      : 0,
+    readingHistory:
+      readingProgress?.map((progress) => ({
+        date: format(new Date(progress.updated_at), "MMM dd"),
+        progress: progress.progress_percentage,
+      })) || [],
+    commentActivity: Object.values(commentsByDate).sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    ),
+    readingStatusDistribution: readingStatusStats,
+    bookmarkActivity: Object.values(bookmarksByDate).sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    ),
+    lastReadAt: readingStatus?.[0]?.last_read_at || null,
+  };
 
   // Fetch novels for recent stories and genre distribution
   const { data: novelsData } = await supabase
@@ -240,6 +397,7 @@ export default async function ProfilePage() {
           completionRate: userStats?.completion_rate || 0,
           lastWritingDate: userStats?.last_writing_date || null,
         }}
+        readingAnalytics={readingAnalytics}
         recentStories={
           novelsData?.map((novel) => ({
             id: novel.id,
