@@ -372,6 +372,6 @@ After completing the JSON object, write ###END###`;
 }
 
 // Configure longer timeout for this route
-export const maxDuration = 300; // Set maximum duration to 300 seconds (5 minutes)
+// export const maxDuration = 300; // Set maximum duration to 300 seconds (5 minutes)
 // export const dynamic = 'force-dynamic';
 // export const fetchCache = 'force-no-store'; 

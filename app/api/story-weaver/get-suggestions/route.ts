@@ -7,7 +7,7 @@ import { authOptions } from "@/lib/auth";
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
 
-export const maxDuration = 300; // Set maximum duration to 300 seconds (5 minutes)
+// export const maxDuration = 300; // Set maximum duration to 300 seconds (5 minutes)
 // export const dynamic = 'force-dynamic';
 // export const fetchCache = 'force-no-store';
 
