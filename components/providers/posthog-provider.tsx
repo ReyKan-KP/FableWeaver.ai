@@ -19,8 +19,12 @@ export function PostHogProvider({ children }: PostHogProviderProps) {
 
     posthog.init(phKey, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-      person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
       capture_pageview: false,
+      autocapture: false,
+      loaded: (posthog) => {
+        // Disable console logging and error reporting
+        posthog.opt_out_capturing();
+      }
     });
   }, []);
 
