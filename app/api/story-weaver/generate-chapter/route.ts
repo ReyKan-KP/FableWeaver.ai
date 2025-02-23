@@ -30,29 +30,51 @@ async function generateChapterContent(prompt: string, retryCount = 0): Promise<a
         const text = result.response.text();
         console.log("[generateChapterContent] Raw AI response:", text);
 
+        // Clean and normalize the text before processing
+        const cleanedText = text
+            .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width spaces
+            .replace(/^\s+|\s+$/g, '') // Trim whitespace
+            .replace(/[\r\n]+/g, '\n'); // Normalize line endings
+
         // Extract the JSON object
-        let jsonStr = text;
-        // Try to find the complete JSON object
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        let jsonStr = cleanedText;
+        // Try to find the complete JSON object with a more robust regex
+        const jsonMatch = cleanedText.match(/\{(?:[^{}]|(?:\{[^{}]*\}))*\}/);
         if (!jsonMatch) {
+            console.error("[generateChapterContent] No JSON object found in response");
             throw new Error("Could not find valid JSON in response");
         }
         jsonStr = jsonMatch[0];
 
         // Try to parse the JSON
         try {
+            // Pre-process the JSON string to handle potential issues
+            jsonStr = jsonStr
+                .replace(/\\(?!["\\/bfnrtu])/g, '\\\\') // Escape unescaped backslashes
+                .replace(/(?<!\\)\\(?!["\\/bfnrtu])/g, '\\\\') // Double escape any remaining unescaped backslashes
+                .replace(/(?<!\\)"/g, '\\"') // Escape unescaped quotes
+                .replace(/[\n\r]+/g, '\\n'); // Handle newlines
+
             const parsed = JSON.parse(jsonStr);
-            if (!parsed.title?.trim() || !parsed.content?.trim() || !parsed.summary?.trim()) {
+            
+            // Validate required fields
+            if (!parsed.title?.toString().trim() || !parsed.content?.toString().trim() || !parsed.summary?.toString().trim()) {
                 throw new Error("Missing required fields");
             }
+
+            // Ensure arrays are properly initialized
+            const plotPoints = Array.isArray(parsed.plotPoints) ? parsed.plotPoints : [];
+            const characterArcs = Array.isArray(parsed.characterArcs) ? parsed.characterArcs : [];
+            const characterRelationships = Array.isArray(parsed.characterRelationships) ? parsed.characterRelationships : [];
+
             return {
-                title: parsed.title.trim(),
-                content: parsed.content.trim(),
-                summary: parsed.summary.trim(),
-                plotPoints: parsed.plotPoints || [],
-                characterArcs: parsed.characterArcs || [],
-                characterRelationships: parsed.characterRelationships || [],
-                storyDirection: parsed.storyDirection || "",
+                title: parsed.title.toString().trim(),
+                content: parsed.content.toString().trim(),
+                summary: parsed.summary.toString().trim(),
+                plotPoints: plotPoints,
+                characterArcs: characterArcs,
+                characterRelationships: characterRelationships,
+                storyDirection: parsed.storyDirection?.toString() || "",
             };
         } catch (parseError) {
             // If direct parsing fails, try to extract fields manually
