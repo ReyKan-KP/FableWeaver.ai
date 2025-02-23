@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -15,40 +15,63 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sparkles, Save, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 
 export default function AISettingsPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const [settings, setSettings] = useState({
-    model: "gpt-4",
-    temperature: 0.7,
-    maxTokens: 2000,
-    presencePenalty: 0.5,
-    frequencyPenalty: 0.5,
-    autoModeration: true,
-    contentFiltering: true,
-    characterConsistency: true,
-    apiKey: "sk-••••••••••••••••••••••",
-  });
+  const [settings, setSettings] = useState<AISettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const supabase = createBrowserSupabaseClient();
 
-  const handleSave = async () => {
-    setIsLoading(true);
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("ai_settings")
+          .select("*")
+          .single();
+
+        if (error) throw error;
+
+        setSettings(data);
+        toast("Settings Loaded", {
+          description: "AI settings have been loaded successfully",
+        });
+      } catch (error) {
+        console.error("Error fetching AI settings:", error);
+        toast.error("Error Loading Settings", {
+          description: "Failed to load AI settings. Please refresh the page.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleSave = async (formData: AISettings) => {
+    setIsSaving(true);
     try {
-      // API call to save settings
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
-      toast({
-        title: "Settings saved",
-        description: "AI settings have been updated successfully.",
+      const { error } = await supabase
+        .from("ai_settings")
+        .update(formData)
+        .eq("id", settings?.id);
+
+      if (error) throw error;
+
+      setSettings(formData);
+      toast("Settings Saved", {
+        description: "AI settings have been updated successfully",
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-        variant: "destructive",
+      console.error("Error saving AI settings:", error);
+      toast.error("Error Saving Settings", {
+        description: "Failed to save AI settings. Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -62,11 +85,11 @@ export default function AISettingsPage() {
           </p>
         </div>
         <Button
-          onClick={handleSave}
-          disabled={isLoading}
+          onClick={() => handleSave(settings as AISettings)}
+          disabled={isLoading || isSaving}
           className="bg-gradient-to-r from-violet-500 to-blue-500"
         >
-          {isLoading ? (
+          {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...
@@ -92,7 +115,7 @@ export default function AISettingsPage() {
             <div className="space-y-2">
               <Label>Model</Label>
               <Select
-                value={settings.model}
+                value={settings?.model}
                 onValueChange={(value) =>
                   setSettings({ ...settings, model: value })
                 }
@@ -109,9 +132,9 @@ export default function AISettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Temperature ({settings.temperature})</Label>
+              <Label>Temperature ({settings?.temperature})</Label>
               <Slider
-                value={[settings.temperature]}
+                value={[settings?.temperature]}
                 min={0}
                 max={1}
                 step={0.1}
@@ -125,7 +148,7 @@ export default function AISettingsPage() {
               <Label>Max Tokens</Label>
               <Input
                 type="number"
-                value={settings.maxTokens}
+                value={settings?.maxTokens}
                 onChange={(e) =>
                   setSettings({
                     ...settings,
@@ -136,9 +159,9 @@ export default function AISettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Presence Penalty ({settings.presencePenalty})</Label>
+              <Label>Presence Penalty ({settings?.presencePenalty})</Label>
               <Slider
-                value={[settings.presencePenalty]}
+                value={[settings?.presencePenalty]}
                 min={0}
                 max={2}
                 step={0.1}
@@ -149,9 +172,9 @@ export default function AISettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Frequency Penalty ({settings.frequencyPenalty})</Label>
+              <Label>Frequency Penalty ({settings?.frequencyPenalty})</Label>
               <Slider
-                value={[settings.frequencyPenalty]}
+                value={[settings?.frequencyPenalty]}
                 min={0}
                 max={2}
                 step={0.1}
@@ -177,7 +200,7 @@ export default function AISettingsPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={settings.autoModeration}
+                  checked={settings?.autoModeration}
                   onCheckedChange={(checked) =>
                     setSettings({ ...settings, autoModeration: checked })
                   }
@@ -192,7 +215,7 @@ export default function AISettingsPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={settings.contentFiltering}
+                  checked={settings?.contentFiltering}
                   onCheckedChange={(checked) =>
                     setSettings({ ...settings, contentFiltering: checked })
                   }
@@ -207,7 +230,7 @@ export default function AISettingsPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={settings.characterConsistency}
+                  checked={settings?.characterConsistency}
                   onCheckedChange={(checked) =>
                     setSettings({ ...settings, characterConsistency: checked })
                   }
@@ -225,7 +248,7 @@ export default function AISettingsPage() {
                 <Label>API Key</Label>
                 <Input
                   type="password"
-                  value={settings.apiKey}
+                  value={settings?.apiKey}
                   onChange={(e) =>
                     setSettings({ ...settings, apiKey: e.target.value })
                   }

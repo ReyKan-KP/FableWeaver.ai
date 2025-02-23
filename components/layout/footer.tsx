@@ -20,7 +20,7 @@ import {
   Linkedin,
   Loader2,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 interface FooterLink {
   href: string;
@@ -34,43 +34,34 @@ interface FooterSection {
 }
 
 const Footer = () => {
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
-  const handleNewsletterSignup = async (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!email.trim()) return;
 
+    setIsSubscribing(true);
     try {
-      const response = await fetch("/api/send", {
+      const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "newsletter",
-          email,
-        }),
+        body: JSON.stringify({ email }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to subscribe");
-      }
-
-      toast({
-        title: "Welcome aboard! 🎉",
-        description: "Check your email for a special welcome message.",
-        variant: "default",
-      });
+      if (!response.ok) throw new Error("Failed to subscribe");
 
       setEmail("");
+      toast("Subscribed!", {
+        description: "You've been successfully subscribed to our newsletter",
+      });
     } catch (error) {
-      toast({
-        title: "Error",
+      console.error("Error subscribing:", error);
+      toast.error("Error", {
         description: "Failed to subscribe. Please try again later.",
-        variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSubscribing(false);
     }
   };
 
@@ -162,7 +153,7 @@ const Footer = () => {
                 Join our newsletter for the latest updates and features.
               </p>
               <form
-                onSubmit={handleNewsletterSignup}
+                onSubmit={handleSubscribe}
                 className="flex flex-col sm:flex-row gap-2"
               >
                 <input
@@ -172,14 +163,14 @@ const Footer = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 px-3 sm:px-4 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubscribing}
                 />
                 <button
                   type="submit"
                   className="px-4 py-2 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  disabled={isSubmitting}
+                  disabled={isSubscribing}
                 >
-                  {isSubmitting ? (
+                  {isSubscribing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span className="sr-only">Subscribing...</span>

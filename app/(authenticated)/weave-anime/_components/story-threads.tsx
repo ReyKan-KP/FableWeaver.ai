@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface StoryThreadsProps {
   onSubmit: (formData: any, isHistory: boolean) => Promise<void>;
@@ -22,15 +22,12 @@ export function StoryThreads({ onSubmit, isLoading }: StoryThreadsProps) {
   const [nResults, setNResults] = useState(5);
   const [personalized, setPersonalized] = useState(false);
   const { data: session } = useSession();
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent, isHistory: boolean) => {
     e.preventDefault();
     if (isHistory && !session) {
-      toast({
-        title: "Authentication required",
+      toast.error("Authentication required", {
         description: "Please login to use history-based recommendations",
-        variant: "destructive",
       });
       return;
     }

@@ -14,11 +14,10 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import Image from "next/image";
 
 const ContactPage = () => {
-  const { toast } = useToast();
   const [formState, setFormState] = useState({
     name: "",
     email: "",
@@ -45,10 +44,8 @@ const ContactPage = () => {
         throw new Error("Failed to send message");
       }
 
-      toast({
-        title: "Success!",
+      toast("Success!", {
         description: "Message sent successfully! I'll get back to you soon.",
-        variant: "default",
       });
 
       // Reset form
@@ -58,10 +55,8 @@ const ContactPage = () => {
         message: "",
       });
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to send message. Please try again later.",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -45,11 +45,12 @@ export default function ChapterView({
   onChapterDelete,
 }: ChapterViewProps) {
   const params = useParams();
-  const { toast } = useToast();
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
   const [revisions, setRevisions] = useState<ChapterRevision[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [chapterToDelete, setChapterToDelete] = useState<Chapter | null>(null);
   const supabase = createBrowserSupabaseClient();
 
   const loadRevisions = async (chapterId: string) => {
@@ -64,37 +65,55 @@ export default function ChapterView({
       setRevisions(data || []);
     } catch (error) {
       console.error("Error loading revisions:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load chapter revisions",
-        variant: "destructive",
+      toast.error("Failed to load chapter revisions", {
+        description: "Please try again later.",
       });
     }
   };
 
-  const handleDeleteChapter = async (chapterId: string) => {
-    if (!confirm("Are you sure you want to delete this chapter?")) return;
+  const handleDeleteChapter = async () => {
+    if (!chapterToDelete) return;
 
     try {
       const { error } = await supabase
         .from("chapters")
         .delete()
-        .eq("id", chapterId);
+        .eq("id", chapterToDelete.id);
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Chapter deleted successfully",
+      onChapterDelete(chapterToDelete.id);
+      toast("Chapter Deleted", {
+        description: "The chapter has been successfully deleted",
       });
-      onChapterDelete(chapterId);
-      setExpandedChapter(null);
     } catch (error) {
       console.error("Error deleting chapter:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete chapter",
-        variant: "destructive",
+      toast.error("Deletion Failed", {
+        description: "Failed to delete chapter. Please try again.",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setChapterToDelete(null);
+    }
+  };
+
+  const handlePublishChapter = async (chapter: Chapter) => {
+    try {
+      const { error } = await supabase
+        .from("chapters")
+        .update({ is_published: !chapter.is_published })
+        .eq("id", chapter.id);
+
+      if (error) throw error;
+
+      onChapterUpdate();
+      toast("Status Updated", {
+        description: chapter.is_published ? "Chapter unpublished" : "Chapter published successfully",
+      });
+    } catch (error) {
+      console.error("Error updating chapter status:", error);
+      toast.error("Update Failed", {
+        description: "Failed to update chapter status. Please try again.",
       });
     }
   };
@@ -184,33 +203,7 @@ export default function ChapterView({
                       </label>
                       <Switch
                         checked={chapter.is_published}
-                        onCheckedChange={async (checked) => {
-                          try {
-                            const { error } = await supabase
-                              .from("chapters")
-                              .update({ is_published: checked })
-                              .eq("id", chapter.id);
-
-                            if (error) throw error;
-
-                            onChapterUpdate();
-                            toast({
-                              title: "Success",
-                              description: `Chapter is now ${checked ? "published" : "unpublished"}`,
-                            });
-                          } catch (error) {
-                            console.error(
-                              "Error updating chapter publish status:",
-                              error
-                            );
-                            toast({
-                              title: "Error",
-                              description:
-                                "Failed to update chapter publish status",
-                              variant: "destructive",
-                            });
-                          }
-                        }}
+                        onCheckedChange={() => handlePublishChapter(chapter)}
                       />
                     </div>
                   </div>
@@ -231,7 +224,8 @@ export default function ChapterView({
                     size="icon"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeleteChapter(chapter.id);
+                      setIsDeleteDialogOpen(true);
+                      setChapterToDelete(chapter);
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -277,6 +271,21 @@ export default function ChapterView({
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <h2 className="text-2xl font-semibold mb-4">Confirm Deletion</h2>
+          <p>Are you sure you want to delete this chapter?</p>
+          <div className="mt-4 space-x-2">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteChapter}>
+              Delete
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

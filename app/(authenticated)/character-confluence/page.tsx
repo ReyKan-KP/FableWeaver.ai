@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   Plus,
   Users,
@@ -115,7 +115,6 @@ export default function CharacterConfluence() {
   const [isCreating, setIsCreating] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
-  const { toast } = useToast();
   const [characterImages, setCharacterImages] = useState<
     Record<string, string>
   >({});
@@ -140,16 +139,11 @@ export default function CharacterConfluence() {
       });
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to load data",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -198,20 +192,12 @@ export default function CharacterConfluence() {
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a group name",
-        variant: "destructive",
-      });
+      toast.error("Please enter a group name");
       return;
     }
 
     if (selectedCharacters.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one character",
-        variant: "destructive",
-      });
+      toast.error("Please select at least one character");
       return;
     }
 
@@ -234,10 +220,7 @@ export default function CharacterConfluence() {
 
       const data = await res.json();
       setGroups((prev) => [data.group, ...prev]);
-      toast({
-        title: "Success",
-        description: "Group created successfully",
-      });
+      toast.success("Group created successfully");
 
       // Reset form and close dialog
       setGroupName("");
@@ -246,12 +229,7 @@ export default function CharacterConfluence() {
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Error creating group:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to create group",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to create group");
     } finally {
       setIsCreating(false);
     }

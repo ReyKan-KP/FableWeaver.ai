@@ -38,7 +38,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -104,7 +104,6 @@ export default function ChatGroupsPage() {
   );
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(false);
   const supabase = createBrowserSupabaseClient();
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchGroups();
@@ -188,12 +187,13 @@ export default function ChatGroupsPage() {
       }));
 
       setGroups(enrichedGroups || []);
+      toast("Groups Loaded", {
+        description: `${enrichedGroups?.length || 0} groups loaded successfully`,
+      });
     } catch (error) {
       console.error("Error fetching chat groups:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch chat groups",
-        variant: "destructive",
+      toast.error("Error Loading Groups", {
+        description: "Failed to load groups. Please refresh the page.",
       });
     } finally {
       setIsLoading(false);
@@ -255,13 +255,64 @@ export default function ChatGroupsPage() {
       setGroupAnalytics(analytics);
     } catch (error) {
       console.error("Error generating analytics:", error);
-      toast({
-        title: "Error",
-        description: "Failed to generate group analytics",
-        variant: "destructive",
+      toast.error("Error Generating Analytics", {
+        description: "Failed to generate group analytics. Please try again later.",
       });
     } finally {
       setIsAnalyticsLoading(false);
+    }
+  };
+
+  const handleDelete = async (group: ChatGroup) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${group.group_name}? This action cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("group_chat_history")
+        .delete()
+        .eq("id", group.id);
+
+      if (error) throw error;
+
+      setGroups((prev) => prev.filter((g) => g.id !== group.id));
+      toast("Group Deleted", {
+        description: `${group.group_name} has been deleted successfully`,
+      });
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      toast.error("Error Deleting Group", {
+        description: "Failed to delete group. Please try again.",
+      });
+    }
+  };
+
+  const handleToggleStatus = async (group: ChatGroup) => {
+    try {
+      const { error } = await supabase
+        .from("group_chat_history")
+        .update({ is_active: !group.is_active })
+        .eq("id", group.id);
+
+      if (error) throw error;
+
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === group.id ? { ...g, is_active: !g.is_active } : g
+        )
+      );
+
+      toast("Status Updated", {
+        description: `${group.group_name} is now ${!group.is_active ? "active" : "inactive"}`,
+      });
+    } catch (error) {
+      console.error("Error updating group status:", error);
+      toast.error("Error Updating Status", {
+        description: "Failed to update group status. Please try again.",
+      });
     }
   };
 

@@ -66,12 +66,12 @@ import {
   Legend,
 } from "recharts";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   HoverCard,
   HoverCardContent,
@@ -555,10 +555,16 @@ export function AnimatedContent({
   createdGroups,
   joinedGroups,
 }: AnimatedContentProps) {
+  const [activeTab, setActiveTab] = useState("overview");
   const router = useRouter();
-  const { toast } = useToast();
   const supabase = createClientComponentClient();
   const [isEditingGoals, setIsEditingGoals] = useState(false);
+
+  useEffect(() => {
+    toast("Welcome to Your Profile", {
+      description: `Good to see you, ${user.name}!`,
+    });
+  }, [user.name]);
 
   const handleUpdateGoals = async (newGoals: {
     daily_words: number;
@@ -572,20 +578,49 @@ export function AnimatedContent({
 
       if (error) throw error;
 
-      toast({
-        title: "Goals updated",
-        description: "Your writing goals have been saved successfully.",
+      toast("Goals Updated", {
+        description: "Your writing goals have been updated successfully",
       });
       setIsEditingGoals(false);
     } catch (error) {
-      console.error("Error updating goals:", error);
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to update writing goals. Please try again.",
-        variant: "destructive",
       });
     }
   };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const tabNames: { [key: string]: string } = {
+      overview: "Overview",
+      writing: "Writing Analytics",
+      reading: "Reading Analytics",
+      groups: "Group Chats",
+      settings: "Settings",
+    };
+    
+    if (tabNames[value]) {
+      toast(`Viewing ${tabNames[value]}`, {
+        description: `Switched to ${tabNames[value].toLowerCase()} section`,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (statistics.currentWritingStreak > 5) {
+      toast("Writing Streak! 🔥", {
+        description: `You're on a ${statistics.currentWritingStreak}-day writing streak!`,
+      });
+    }
+  }, [statistics.currentWritingStreak]);
+
+  useEffect(() => {
+    if (readingAnalytics.totalBooksRead > 0 && readingAnalytics.totalBooksRead % 10 === 0) {
+      toast("Reading Milestone! 📚", {
+        description: `Congratulations! You've completed ${readingAnalytics.totalBooksRead} books!`,
+      });
+    }
+  }, [readingAnalytics.totalBooksRead]);
 
   return (
     <motion.div
@@ -748,7 +783,7 @@ export function AnimatedContent({
       </motion.div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs defaultValue="overview" className="w-full" value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="inline-flex h-10 items-center justify-center rounded-md p-1 text-muted-foreground mb-6 bg-primary/5">
           <TabsTrigger
             value="overview"

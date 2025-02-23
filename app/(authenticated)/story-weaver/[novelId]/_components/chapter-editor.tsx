@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 import { Loader2, Save, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,7 +49,6 @@ export default function ChapterEditor({
   onClose,
   onUpdate,
 }: ChapterEditorProps) {
-  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showRevisions, setShowRevisions] = useState(false);
@@ -61,40 +60,73 @@ export default function ChapterEditor({
   const supabase = createBrowserSupabaseClient();
 
   const handleSave = async () => {
-    if (!editedChapter.content.trim() || !editedChapter.summary.trim()) {
-      toast({
-        title: "Error",
-        description: "Content and summary are required",
-        variant: "destructive",
+    if (!editedChapter.title.trim()) {
+      toast.error("Title Required", {
+        description: "Please enter a title for your chapter",
+      });
+      return;
+    }
+
+    if (!editedChapter.content.trim()) {
+      toast.error("Content Required", {
+        description: "Please add some content to your chapter",
+      });
+      return;
+    }
+
+    if (!editedChapter.summary.trim()) {
+      toast.error("Summary Required", {
+        description: "Please provide a brief summary of your chapter",
       });
       return;
     }
 
     setIsSaving(true);
     try {
+      // Save current version to revisions
+      const { error: revisionError } = await supabase
+        .from("chapter_revisions")
+        .insert([
+          {
+            chapter_id: chapter.id,
+            content: chapter.content,
+            summary: chapter.summary,
+            version: chapter.version,
+          },
+        ]);
+
+      if (revisionError) {
+        console.error("Error saving revision:", revisionError);
+        toast("Warning", {
+          description: "Failed to save revision history, but proceeding with update",
+        });
+      }
+
+      const wordCount = editedChapter.content.split(/\s+/).length;
       const { error } = await supabase
         .from("chapters")
         .update({
           title: editedChapter.title,
           content: editedChapter.content,
           summary: editedChapter.summary,
+          word_count: wordCount,
+          version: chapter.version + 1,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", chapter.id);
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Chapter updated successfully",
+      toast("Chapter Saved", {
+        description: `Successfully updated chapter ${chapter.chapter_number} with ${wordCount} words`,
       });
+
       onUpdate();
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating chapter:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update chapter",
-        variant: "destructive",
+      toast.error("Save Failed", {
+        description: error instanceof Error ? error.message : "Failed to save chapter. Please try again.",
       });
     } finally {
       setIsSaving(false);
@@ -102,16 +134,52 @@ export default function ChapterEditor({
   };
 
   const restoreRevision = async (revision: (typeof revisions)[0]) => {
-    setEditedChapter({
-      ...editedChapter,
-      content: revision.content,
-      summary: revision.summary,
-    });
-    setShowRevisions(false);
+    try {
+      setEditedChapter({
+        ...editedChapter,
+        content: revision.content,
+        summary: revision.summary,
+      });
+      setShowRevisions(false);
+      setIsEditing(true);
+      
+      toast("Revision Restored", {
+        description: `Restored version ${revision.version} from ${formatDate(revision.created_at)}. Save your changes to keep this version.`,
+      });
+    } catch (error) {
+      console.error("Error restoring revision:", error);
+      toast.error("Restore Failed", {
+        description: "Failed to restore the selected revision. Please try again.",
+      });
+    }
+  };
+
+  const handleStartEditing = () => {
     setIsEditing(true);
-    toast({
-      title: "Revision restored",
-      description: "You can now edit and save the changes",
+    toast("Editing Mode", {
+      description: "You can now edit your chapter. Don't forget to save your changes!",
+    });
+  };
+
+  const handleCancelEditing = () => {
+    if (
+      editedChapter.title !== chapter.title ||
+      editedChapter.content !== chapter.content ||
+      editedChapter.summary !== chapter.summary
+    ) {
+      const confirmCancel = window.confirm("You have unsaved changes. Are you sure you want to cancel?");
+      if (!confirmCancel) return;
+    }
+    
+    setEditedChapter({
+      title: chapter.title,
+      content: chapter.content,
+      summary: chapter.summary,
+    });
+    setIsEditing(false);
+    
+    toast("Editing Cancelled", {
+      description: "Your changes have been discarded",
     });
   };
 
@@ -163,7 +231,7 @@ export default function ChapterEditor({
           {!isEditing ? (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
-                onClick={() => setIsEditing(true)}
+                onClick={handleStartEditing}
                 className="bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 text-white hover:brightness-110"
               >
                 Edit
@@ -173,7 +241,7 @@ export default function ChapterEditor({
             <>
               <Button
                 variant="ghost"
-                onClick={() => setIsEditing(false)}
+                onClick={handleCancelEditing}
                 className="hover:bg-accent/10"
               >
                 Cancel

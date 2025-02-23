@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { updateProfile } from "@/actions/profile-actions";
 import {
   Card,
@@ -32,12 +32,60 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState(user.image);
   const [removeAvatar, setRemoveAvatar] = useState(false);
-  const { toast } = useToast();
   const router = useRouter();
   const { update: updateSession } = useSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File Too Large", {
+          description: "Please select an image under 5MB",
+        });
+        return;
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Invalid File Type", {
+          description: "Please select an image file",
+        });
+        return;
+      }
+
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      setRemoveAvatar(false);
+      
+      toast("Image Selected", {
+        description: "Your new avatar has been selected. Don't forget to save your changes!",
+      });
+    }
+  }
+
+  function handleRemoveAvatar() {
+    setAvatarFile(null);
+    setAvatarPreview("");
+    setRemoveAvatar(true);
+    
+    toast("Avatar Removed", {
+      description: "Your avatar will be removed when you save changes",
+    });
+  }
+
   async function handleSubmit(formData: FormData) {
+    const username = formData.get("username") as string;
+    
+    // Validate username
+    if (!username || username.trim().length < 3) {
+      toast.error("Invalid Username", {
+        description: "Username must be at least 3 characters long",
+      });
+      return;
+    }
+
     setLoading(true);
 
     if (avatarFile) {
@@ -58,36 +106,31 @@ export function ProfileForm({ user }: ProfileFormProps) {
         image: result.avatarUrl,
       });
 
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+      toast("Profile Updated Successfully", {
+        description: "Your profile changes have been saved",
       });
+
+      // Show additional toast for specific changes
+      if (result.userName !== user.name) {
+        toast("Username Changed", {
+          description: `Your username has been updated to ${result.userName}`,
+        });
+      }
+
+      if (result.avatarUrl !== user.image) {
+        toast("Avatar Updated", {
+          description: removeAvatar ? "Your avatar has been removed" : "Your new avatar has been set",
+        });
+      }
 
       router.refresh();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: (error as Error).message,
-        variant: "destructive",
+      toast.error("Update Failed", {
+        description: error instanceof Error ? error.message : "Failed to update profile. Please try again.",
       });
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
-      setRemoveAvatar(false);
-    }
-  }
-
-  function handleRemoveAvatar() {
-    setAvatarFile(null);
-    setAvatarPreview("");
-    setRemoveAvatar(true);
   }
 
   return (

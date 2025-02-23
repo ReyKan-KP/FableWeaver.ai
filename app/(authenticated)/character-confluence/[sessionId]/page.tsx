@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Send, Loader2, ArrowLeft, Info, Users, Sparkles } from "lucide-react";
 import type { GroupChat, GroupChatMessage } from "@/types/chat";
 import Image from "next/image";
@@ -83,7 +83,6 @@ export default function GroupChatSession() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [characterImages, setCharacterImages] = useState<
@@ -97,14 +96,20 @@ export default function GroupChatSession() {
     const fetchMessages = async () => {
       try {
         const res = await fetch(`/api/group-chat/${sessionId}`);
+        if (!res.ok) throw new Error("Failed to load messages");
         const data = await res.json();
         setMessages(data.messages || []);
+        
+        // Add success toast for initial load
+        if (loading) {
+          toast("Chat Loaded", {
+            description: "Welcome to the group chat!",
+          });
+        }
       } catch (error) {
         console.error("Error fetching messages:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load messages",
-          variant: "destructive",
+        toast.error("Error Loading Chat", {
+          description: "Failed to load chat messages. Please try refreshing.",
         });
       } finally {
         setLoading(false);
@@ -143,7 +148,7 @@ export default function GroupChatSession() {
         channel.unsubscribe();
       };
     }
-  }, [session?.user?.id, sessionId, toast]);
+  }, [session?.user?.id, sessionId, loading]);
 
   useEffect(() => {
     const scrollToBottom = () => {
@@ -212,11 +217,15 @@ export default function GroupChatSession() {
     const fetchGroupInfo = async () => {
       try {
         const res = await fetch(`/api/group-chat/${sessionId}`);
+        if (!res.ok) throw new Error("Failed to load group information");
         const data = await res.json();
         setGroupInfo(data);
         setMessages(data.messages || []);
       } catch (error) {
         console.error("Error fetching group info:", error);
+        toast.error("Error", {
+          description: "Failed to load group information. Some features may be limited.",
+        });
       } finally {
         setLoading(false);
       }
@@ -246,10 +255,8 @@ export default function GroupChatSession() {
       setInput("");
     } catch (error) {
       console.error("Error sending message:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
+      toast.error("Error Sending Message", {
+        description: "Failed to send your message. Please try again.",
       });
     } finally {
       setSending(false);

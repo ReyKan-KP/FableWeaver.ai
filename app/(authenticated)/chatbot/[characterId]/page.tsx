@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
 import CharacterChatLoading from "./loading";
+import { toast } from "sonner";
+
 interface ChatSessionResponse {
   session_id: string;
   messages: Message[];
@@ -32,6 +34,9 @@ export default function CharacterChatPage() {
     required: true,
     onUnauthenticated() {
       router.push("/sign-in");
+      toast.error("Authentication Required", {
+        description: "Please sign in to chat with characters",
+      });
     },
   });
 
@@ -56,6 +61,10 @@ export default function CharacterChatPage() {
         }
         const characterData: Character = await characterResponse.json();
         setCharacter(characterData);
+        
+        toast("Character Loaded", {
+          description: `Ready to chat with ${characterData.name}!`,
+        });
 
         // Initialize or retrieve chat session
         const sessionResponse = await fetch("/api/chat-sessions", {
@@ -75,7 +84,11 @@ export default function CharacterChatPage() {
         setMessages(sessionData.messages);
       } catch (error) {
         console.error("Error initializing chat:", error);
-        setError("Failed to initialize chat. Please try again later.");
+        const errorMessage = error instanceof Error ? error.message : "Failed to initialize chat";
+        setError(errorMessage);
+        toast.error("Chat Initialization Failed", {
+          description: errorMessage,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -83,6 +96,14 @@ export default function CharacterChatPage() {
 
     initializeChat();
   }, [characterId, session, status]);
+
+  useEffect(() => {
+    if (showInfo) {
+      toast("Character Info", {
+        description: "Showing character details and background",
+      });
+    }
+  }, [showInfo]);
 
   if (error) {
     return (

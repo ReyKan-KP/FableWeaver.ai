@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileDown, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 interface ExportButtonProps {
@@ -12,7 +12,6 @@ interface ExportButtonProps {
 
 export default function ExportButton({ novelId }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
-  const { toast } = useToast();
 
   const handleExport = async () => {
     try {
@@ -56,19 +55,13 @@ export default function ExportButton({ novelId }: ExportButtonProps) {
       // Clean up the URL
       window.URL.revokeObjectURL(url);
 
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Your novel has been exported as PDF",
       });
     } catch (error) {
       console.error("Error exporting PDF:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Failed to export novel as PDF",
-        variant: "destructive",
+      toast.error("Error", {
+        description: error instanceof Error ? error.message : "Failed to export novel as PDF",
       });
     } finally {
       setIsExporting(false);

@@ -264,11 +264,10 @@ export default function StoryWeaver() {
   };
 
   const handleCreateNovel = async () => {
-    if (!session?.user?.id) return;
-    if (!newNovel.title.trim() || !newNovel.description.trim()) {
+    if (!newNovel.title.trim()) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "Title Required",
+        description: "Please enter a title for your novel",
         variant: "destructive",
       });
       return;
@@ -276,66 +275,66 @@ export default function StoryWeaver() {
 
     setIsCreatingNovel(true);
     try {
-      const formData = new FormData();
-      formData.append("user_id", session.user.id);
-      formData.append("title", newNovel.title);
-      formData.append("genre", newNovel.genre);
-      formData.append("description", newNovel.description);
-      formData.append("is_public", "false");
-
+      let coverImageUrl = "";
+      
       if (novelImage) {
-        formData.append("cover_image", novelImage);
-      }
+        const fileExt = novelImage.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('novel-covers')
+          .upload(fileName, novelImage);
 
-      if (removeImage) {
-        formData.append("removeImage", "true");
-      }
+        if (uploadError) throw uploadError;
 
-      const url = editingNovel
-        ? `/api/novels/${editingNovel.id}`
-        : "/api/novels";
-      const method = editingNovel ? "PUT" : "POST";
+        const { data: { publicUrl } } = supabase.storage
+          .from('novel-covers')
+          .getPublicUrl(fileName);
 
-      const response = await fetch(url, {
-        method,
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save novel");
-      }
-
-      if (editingNovel) {
-        setNovels(novels.map((n) => (n.id === editingNovel.id ? data : n)));
-      } else {
-        setNovels([data, ...novels]);
+        coverImageUrl = publicUrl;
+        
         toast({
-          title: "Novel created",
-          description:
-            "Your novel has been created successfully. Once you publish it, an admin will review it to make it public.",
+          title: "Cover Image Uploaded",
+          description: "Your novel's cover image has been uploaded successfully",
         });
       }
 
+      const { data: novel, error } = await supabase.from("novels").insert([
+        {
+          title: newNovel.title,
+          genre: newNovel.genre,
+          description: newNovel.description,
+          user_id: session?.user?.id,
+          cover_image: coverImageUrl,
+          is_public: newNovel.is_public,
+        },
+      ]).select().single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Novel Created",
+        description: "Your new novel has been created successfully! You can now start adding chapters.",
+      });
+
+      // Reset form
       setNewNovel({
         title: "",
         genre: "fantasy",
         description: "",
-        is_public: false,
+        is_public: true,
         cover_image: "",
       });
       setNovelImage(null);
       setImagePreview("");
-      setRemoveImage(false);
       setIsDialogOpen(false);
-      setIsEditDialogOpen(false);
-      setEditingNovel(null);
+      
+      // Navigate to the new novel
+      router.push(`/story-weaver/${novel.id}`);
     } catch (error) {
-      console.error("Error saving novel:", error);
+      console.error("Error creating novel:", error);
       toast({
-        title: "Error",
-        description: "Failed to save novel",
+        title: "Creation Failed",
+        description: error instanceof Error ? error.message : "Failed to create novel. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -344,67 +343,181 @@ export default function StoryWeaver() {
   };
 
   const handleGenerateChapter = async () => {
-    if (!selectedNovel || !storyState.prompt) return;
+    if (!storyState.prompt.trim()) {
+      toast({
+        title: "Prompt Required",
+        description: "Please enter a prompt to generate your story",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setStoryState((prev) => ({
-      ...prev,
-      isGenerating: true,
-      error: null,
-    }));
+    setStoryState((prev) => ({ ...prev, isGenerating: true, error: null }));
+    
+    toast({
+      title: "Generating Story",
+      description: "Please wait while we weave your story...",
+    });
 
     try {
-      // Get previous chapter content for context
-      const previousChapter = chapters[chapters.length - 1];
-
-      const response = await fetch("/api/story-weaver/generate-chapter", {
+      // Your story generation logic here
+      const response = await fetch("/api/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          novelId: selectedNovel.id,
           prompt: storyState.prompt,
-          previousChapter: previousChapter
-            ? {
-                content: previousChapter.content,
-                summary: previousChapter.summary,
-              }
-            : null,
-          chapterNumber: chapters.length + 1,
+          genre: storyState.genre,
         }),
       });
 
+      if (!response.ok) throw new Error("Failed to generate story");
+
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to generate chapter");
-      }
-
-      // Update chapters list
-      setChapters((prev) => [...prev, data.chapter]);
-
-      // Reset state
       setStoryState((prev) => ({
         ...prev,
-        prompt: "",
-        generatedContent: data.chapter.content,
+        generatedContent: data.content,
         isGenerating: false,
       }));
 
       toast({
-        title: "Success",
-        description: "New chapter generated successfully",
+        title: "Story Generated",
+        description: "Your story has been generated successfully! You can now edit and save it.",
       });
     } catch (error) {
-      console.error("Error generating chapter:", error);
+      console.error("Error generating story:", error);
       setStoryState((prev) => ({
         ...prev,
+        error: "Failed to generate story",
         isGenerating: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
       }));
+      
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate story. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditNovel = async () => {
+    if (!editingNovel) return;
+    
+    if (!editingNovel.title.trim()) {
+      toast({
+        title: "Title Required",
+        description: "Please enter a title for your novel",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let coverImageUrl = editingNovel.cover_image;
+      
+      if (novelImage) {
+        const fileExt = novelImage.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('novel-covers')
+          .upload(fileName, novelImage);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('novel-covers')
+          .getPublicUrl(fileName);
+
+        coverImageUrl = publicUrl;
+        
+        toast({
+          title: "Cover Updated",
+          description: "Your novel's cover image has been updated successfully",
+        });
+      }
+
+      const { error } = await supabase
+        .from("novels")
+        .update({
+          title: editingNovel.title,
+          genre: editingNovel.genre,
+          description: editingNovel.description,
+          cover_image: coverImageUrl,
+          is_public: editingNovel.is_public,
+        })
+        .eq("id", editingNovel.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Novel Updated",
+        description: "Your novel has been updated successfully",
+      });
+
+      setEditingNovel(null);
+      setIsEditDialogOpen(false);
+      loadNovels();
+    } catch (error) {
+      console.error("Error updating novel:", error);
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "Failed to update novel. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteNovel = async (novelId: string) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this novel? This action cannot be undone.");
+    if (!confirmDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("novels")
+        .delete()
+        .eq("id", novelId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Novel Deleted",
+        description: "Your novel has been deleted successfully",
+      });
+
+      loadNovels();
+    } catch (error) {
+      console.error("Error deleting novel:", error);
+      toast({
+        title: "Deletion Failed",
+        description: error instanceof Error ? error.message : "Failed to delete novel. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePublishNovel = async (novelId: string, isPublished: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("novels")
+        .update({ is_published: !isPublished })
+        .eq("id", novelId);
+
+      if (error) throw error;
+
+      toast({
+        title: isPublished ? "Novel Unpublished" : "Novel Published",
+        description: isPublished 
+          ? "Your novel is now in draft mode" 
+          : "Your novel is now publicly available",
+      });
+
+      loadNovels();
+    } catch (error) {
+      console.error("Error updating novel status:", error);
+      toast({
+        title: "Status Update Failed",
+        description: error instanceof Error ? error.message : "Failed to update novel status. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

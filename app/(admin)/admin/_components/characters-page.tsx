@@ -66,6 +66,7 @@ import {
   AreaChart,
   Area,
 } from "recharts";
+import { toast } from "sonner";
 
 interface Character {
   id: string;
@@ -673,7 +674,6 @@ export default function CharactersPage() {
   const supabase = createBrowserSupabaseClient();
   const { data: session } = useSession();
   const router = useRouter();
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchCharacters();
@@ -719,12 +719,13 @@ export default function CharactersPage() {
       }));
 
       setCharacters(processedCharacters);
+      toast("Characters Loaded", {
+        description: `${processedCharacters.length} characters loaded successfully`,
+      });
     } catch (error) {
       console.error("Error fetching characters:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch characters. Please try again.",
-        variant: "destructive",
+      toast.error("Error Loading Characters", {
+        description: "Failed to load characters. Please refresh the page.",
       });
     } finally {
       setIsLoading(false);
@@ -753,16 +754,13 @@ export default function CharactersPage() {
       if (error) throw error;
 
       setCharacters(characters.filter((c) => c.id !== selectedCharacter.id));
-      toast({
-        title: "Success",
-        description: "Character deleted successfully",
+      toast("Character Deleted", {
+        description: `${selectedCharacter.name} has been deleted successfully`,
       });
     } catch (error) {
       console.error("Error deleting character:", error);
-      toast({
-        title: "Error",
+      toast.error("Error Deleting Character", {
         description: "Failed to delete character. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsDeleteDialogOpen(false);
@@ -785,16 +783,13 @@ export default function CharactersPage() {
         )
       );
 
-      toast({
-        title: "Success",
+      toast("Character Updated", {
         description: `Character is now ${!character.is_public ? "public" : "private"}`,
       });
     } catch (error) {
       console.error("Error toggling character visibility:", error);
-      toast({
-        title: "Error",
+      toast.error("Error Updating Character", {
         description: "Failed to update character visibility. Please try again.",
-        variant: "destructive",
       });
     }
   };
@@ -824,16 +819,13 @@ export default function CharactersPage() {
         )
       );
 
-      toast({
-        title: "Success",
-        description: "Character has been approved and is now public",
+      toast("Character Approved", {
+        description: `${character.name} has been approved and is now public`,
       });
     } catch (error) {
       console.error("Error approving character:", error);
-      toast({
-        title: "Error",
+      toast.error("Error Approving Character", {
         description: "Failed to approve character. Please try again.",
-        variant: "destructive",
       });
     }
   };

@@ -57,6 +57,7 @@ import ChapterView from "./_components/chapter-view";
 import ExportButton from "./_components/export-button";
 import Image from "next/image";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface Novel {
   id: string;
@@ -136,7 +137,6 @@ export default function NovelView() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
-  const { toast } = useToast();
   const [novel, setNovel] = useState<Novel | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -183,10 +183,8 @@ export default function NovelView() {
       setChapterRevisions(revisions || []);
     } catch (error) {
       console.error("Error loading revisions:", error);
-      toast({
-        title: "Error",
+      toast.error("Failed to load chapter revisions", {
         description: "Failed to load chapter revisions",
-        variant: "destructive",
       });
     }
   };
@@ -300,17 +298,13 @@ export default function NovelView() {
 
       setChapters((prev) => [...prev, data.chapter]);
       setPrompt("");
-      toast({
-        title: "Success",
-        description: "New chapter generated successfully",
+      toast.success("Chapter Generated", {
+        description: "New chapter has been generated successfully",
       });
     } catch (error) {
       console.error("Error generating chapter:", error);
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to generate chapter",
-        variant: "destructive",
+      toast.error("Generation Failed", {
+        description: error instanceof Error ? error.message : "Failed to generate chapter",
       });
     } finally {
       setIsGenerating(false);
@@ -327,26 +321,21 @@ export default function NovelView() {
       if (error) throw error;
 
       setCollaborators((prev) => prev.filter((c) => c.id !== collaboratorId));
-      toast({
-        title: "Success",
+      toast.success("Collaborator removed", {
         description: "Collaborator removed successfully",
       });
     } catch (error) {
       console.error("Error removing collaborator:", error);
-      toast({
-        title: "Error",
+      toast.error("Failed to remove collaborator", {
         description: "Failed to remove collaborator",
-        variant: "destructive",
       });
     }
   };
 
   const handleAddCollaborator = async () => {
     if (!newCollaborator.email.trim()) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Please enter an email address",
-        variant: "destructive",
       });
       return;
     }
@@ -362,10 +351,8 @@ export default function NovelView() {
       if (userError) throw userError;
 
       if (!userData) {
-        toast({
-          title: "Error",
+        toast.error("Error", {
           description: "User not found",
-          variant: "destructive",
         });
         return;
       }
@@ -396,16 +383,13 @@ export default function NovelView() {
       setCollaborators((prev) => [...prev, collaborator]);
       setNewCollaborator({ email: "", role: "viewer" });
       setShowCollaborators(false);
-      toast({
-        title: "Success",
+      toast.success("Collaborator added", {
         description: "Collaborator added successfully",
       });
     } catch (error) {
       console.error("Error adding collaborator:", error);
-      toast({
-        title: "Error",
+      toast.error("Failed to add collaborator", {
         description: "Failed to add collaborator",
-        variant: "destructive",
       });
     }
   };
@@ -422,16 +406,13 @@ export default function NovelView() {
       if (error) throw error;
 
       setTags((prev) => [...prev, tag]);
-      toast({
-        title: "Success",
+      toast.success("Tag added", {
         description: "Tag added successfully",
       });
     } catch (error) {
       console.error("Error adding tag:", error);
-      toast({
-        title: "Error",
+      toast.error("Failed to add tag", {
         description: "Failed to add tag",
-        variant: "destructive",
       });
     }
   };
@@ -468,12 +449,13 @@ export default function NovelView() {
 
       const data = await response.json();
       setSuggestions(data);
+      toast.success("Suggestions Generated", {
+        description: "New story suggestions have been generated successfully",
+      });
     } catch (error) {
       console.error("Error getting suggestions:", error);
-      toast({
-        title: "Error",
-        description: "Failed to get content suggestions",
-        variant: "destructive",
+      toast.error("Generation Failed", {
+        description: "Failed to get content suggestions. Please try again later.",
       });
     } finally {
       setIsLoadingSuggestions(false);
@@ -621,8 +603,7 @@ export default function NovelView() {
                                 setNovel((prev) =>
                                   prev ? { ...prev, is_public: checked } : null
                                 );
-                                toast({
-                                  title: "Success",
+                                toast.success(`Novel is now ${checked ? "public" : "private"}`, {
                                   description: `Novel is now ${checked ? "public" : "private"}`,
                                 });
                               } catch (error) {
@@ -630,11 +611,8 @@ export default function NovelView() {
                                   "Error updating novel visibility:",
                                   error
                                 );
-                                toast({
-                                  title: "Error",
-                                  description:
-                                    "Failed to update novel visibility",
-                                  variant: "destructive",
+                                toast.error("Failed to update novel visibility", {
+                                  description: "Failed to update novel visibility",
                                 });
                               }
                             }}
@@ -664,8 +642,7 @@ export default function NovelView() {
                                     ? { ...prev, is_published: checked }
                                     : null
                                 );
-                                toast({
-                                  title: "Success",
+                                toast.success(`Novel is now ${checked ? "published" : "unpublished"}`, {
                                   description: `Novel is now ${checked ? "published" : "unpublished"}`,
                                 });
                               } catch (error) {
@@ -673,11 +650,8 @@ export default function NovelView() {
                                   "Error updating novel publish status:",
                                   error
                                 );
-                                toast({
-                                  title: "Error",
-                                  description:
-                                    "Failed to update novel publish status",
-                                  variant: "destructive",
+                                toast.error("Failed to update novel publish status", {
+                                  description: "Failed to update novel publish status",
                                 });
                               }
                             }}
@@ -1443,16 +1417,13 @@ export default function NovelView() {
                               if (error) throw error;
 
                               setTags((prev) => prev.filter((t) => t !== tag));
-                              toast({
-                                title: "Success",
+                              toast.success("Tag removed", {
                                 description: "Tag removed successfully",
                               });
                             } catch (error) {
                               console.error("Error removing tag:", error);
-                              toast({
-                                title: "Error",
+                              toast.error("Failed to remove tag", {
                                 description: "Failed to remove tag",
-                                variant: "destructive",
                               });
                             }
                           }}
@@ -1471,7 +1442,7 @@ export default function NovelView() {
 
       {/* Help Modal */}
       <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>
-        <DialogContent className="max-w-7xl">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 text-transparent bg-clip-text">
               Story Weaver Guide
