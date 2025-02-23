@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import jsPDF from "jspdf";
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);

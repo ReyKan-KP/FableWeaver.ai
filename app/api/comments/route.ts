@@ -28,6 +28,8 @@ interface User {
     avatar_url: string;
 }
 
+export const maxDuration = 60;
+
 // Get comments for a novel or chapter
 export async function GET(request: Request) {
     try {

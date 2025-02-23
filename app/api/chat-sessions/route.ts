@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions)

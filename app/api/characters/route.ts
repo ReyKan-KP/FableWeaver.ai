@@ -6,6 +6,8 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+export const maxDuration = 60;
+
 export async function GET() {
     try {
         const { data, error } = await supabase

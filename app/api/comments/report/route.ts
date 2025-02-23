@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export const maxDuration = 60;
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);

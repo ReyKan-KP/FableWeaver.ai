@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export const maxDuration = 60;
+
 // GET endpoint to fetch a specific chapter
 export async function GET(
     req: Request,

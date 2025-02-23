@@ -5,6 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'; import * as cheerio 
 
 const googleApiKey = process.env.GOOGLE_API_KEY!; const genAI = new GoogleGenerativeAI(googleApiKey);
 
+export const maxDuration = 60;
 interface CharacterData { name: string; description: string; content_source: string; content_types: string[]; fandom_url: string; dialogues: string[]; is_public: boolean; creator_id: string; image_url: string | null; is_active: boolean; fandom_content?: string; personality?: string; background?: string; notable_quotes?: string; }
 
 async function scrapeFandomContent(url: string) {

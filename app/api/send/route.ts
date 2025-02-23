@@ -5,6 +5,8 @@ import { NewsletterWelcomeEmail } from "@/components/emails/newsletter-welcome-e
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
     try {
         const body = await request.json();

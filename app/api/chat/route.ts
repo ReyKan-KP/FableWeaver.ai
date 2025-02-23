@@ -8,6 +8,8 @@ import type { Message, Character } from "@/types/chat"
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!)
 
+export const maxDuration = 60;
+
 function formatConversationHistory(messages: Message[]): string {
   return messages
     .map((msg) => {

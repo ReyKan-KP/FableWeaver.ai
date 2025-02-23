@@ -16,6 +16,7 @@ interface UserProfile {
 }
 
 export const dynamic = "force-dynamic" // This opts out of static generation
+export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
     try {

@@ -8,6 +8,8 @@ import { authOptions } from "@/lib/auth";
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
     try {
         // 1. Check session

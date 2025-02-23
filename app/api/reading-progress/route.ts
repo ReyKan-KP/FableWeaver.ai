@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+export const maxDuration = 60;
+
 // Get reading progress
 export async function GET(request: Request) {
     try {

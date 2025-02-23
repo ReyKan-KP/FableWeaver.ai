@@ -18,6 +18,8 @@ interface UserProfile {
     user_name: string;
 }
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
