@@ -39,7 +39,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} transition-colors duration-300`}>
         <AuthProvider>
-          <PostHogProvider>
+          {/* <PostHogProvider> */}
             <ThemeProvider
               attribute="class"
               defaultTheme="system"
@@ -58,7 +58,7 @@ export default async function RootLayout({
             </footer>
             <Analytics />
             </ThemeProvider>
-          </PostHogProvider>
+          {/* </PostHogProvider> */}
         </AuthProvider>
       </body>
     </html>
