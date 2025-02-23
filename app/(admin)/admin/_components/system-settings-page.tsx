@@ -25,9 +25,33 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
+import { SystemSettings } from "@/app/types/system";
+
+const DEFAULT_SETTINGS: SystemSettings = {
+  id: "",
+  siteName: "",
+  siteDescription: "",
+  maintenanceMode: false,
+  registrationEnabled: true,
+  emailVerificationRequired: true,
+  maxUploadSize: 10,
+  emailSettings: {
+    smtpHost: "",
+    smtpPort: 587,
+    smtpUser: "",
+    smtpPassword: "",
+    fromEmail: "",
+    fromName: "",
+  },
+  storageSettings: {
+    provider: "supabase",
+    bucketName: "",
+  },
+  backupFrequency: "daily",
+};
 
 export default function SystemSettingsPage() {
-  const [settings, setSettings] = useState<SystemSettings | null>(null);
+  const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const supabase = createBrowserSupabaseClient();
@@ -42,7 +66,7 @@ export default function SystemSettingsPage() {
 
         if (error) throw error;
 
-        setSettings(data);
+        setSettings({ ...DEFAULT_SETTINGS, ...data });
         toast("Settings Loaded", {
           description: "System settings have been loaded successfully",
         });
@@ -59,17 +83,37 @@ export default function SystemSettingsPage() {
     fetchSettings();
   }, []);
 
-  const handleSave = async (formData: SystemSettings) => {
+  const updateSettings = <K extends keyof SystemSettings>(
+    key: K,
+    value: SystemSettings[K]
+  ) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateEmailSettings = (update: Partial<SystemSettings["emailSettings"]>) => {
+    setSettings((prev) => ({
+      ...prev,
+      emailSettings: { ...prev.emailSettings, ...update },
+    }));
+  };
+
+  const updateStorageSettings = (update: Partial<SystemSettings["storageSettings"]>) => {
+    setSettings((prev) => ({
+      ...prev,
+      storageSettings: { ...prev.storageSettings, ...update },
+    }));
+  };
+
+  const handleSave = async () => {
     setIsSaving(true);
     try {
       const { error } = await supabase
         .from("system_settings")
-        .update(formData)
-        .eq("id", settings?.id);
+        .update(settings)
+        .eq("id", settings.id);
 
       if (error) throw error;
 
-      setSettings(formData);
       toast("Settings Saved", {
         description: "System settings have been updated successfully",
       });
@@ -83,6 +127,14 @@ export default function SystemSettingsPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
@@ -93,7 +145,7 @@ export default function SystemSettingsPage() {
           </p>
         </div>
         <Button
-          onClick={() => handleSave(settings as SystemSettings)}
+          onClick={handleSave}
           disabled={isLoading || isSaving}
           className="bg-gradient-to-r from-violet-500 to-blue-500"
         >
@@ -123,20 +175,16 @@ export default function SystemSettingsPage() {
             <div className="space-y-2">
               <Label>Site Name</Label>
               <Input
-                value={settings?.siteName}
-                onChange={(e) =>
-                  setSettings({ ...settings, siteName: e.target.value })
-                }
+                value={settings.siteName}
+                onChange={(e) => updateSettings("siteName", e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
               <Label>Site Description</Label>
               <Textarea
-                value={settings?.siteDescription}
-                onChange={(e) =>
-                  setSettings({ ...settings, siteDescription: e.target.value })
-                }
+                value={settings.siteDescription}
+                onChange={(e) => updateSettings("siteDescription", e.target.value)}
               />
             </div>
 
@@ -148,10 +196,8 @@ export default function SystemSettingsPage() {
                 </p>
               </div>
               <Switch
-                checked={settings?.maintenanceMode}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, maintenanceMode: checked })
-                }
+                checked={settings.maintenanceMode}
+                onCheckedChange={(checked) => updateSettings("maintenanceMode", checked)}
               />
             </div>
           </CardContent>
@@ -173,10 +219,8 @@ export default function SystemSettingsPage() {
                 </p>
               </div>
               <Switch
-                checked={settings?.registrationEnabled}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, registrationEnabled: checked })
-                }
+                checked={settings.registrationEnabled}
+                onCheckedChange={(checked) => updateSettings("registrationEnabled", checked)}
               />
             </div>
 
@@ -188,10 +232,8 @@ export default function SystemSettingsPage() {
                 </p>
               </div>
               <Switch
-                checked={settings?.emailVerificationRequired}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, emailVerificationRequired: checked })
-                }
+                checked={settings.emailVerificationRequired}
+                onCheckedChange={(checked) => updateSettings("emailVerificationRequired", checked)}
               />
             </div>
 
@@ -199,13 +241,8 @@ export default function SystemSettingsPage() {
               <Label>Max Upload Size (MB)</Label>
               <Input
                 type="number"
-                value={settings?.maxUploadSize}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    maxUploadSize: parseInt(e.target.value),
-                  })
-                }
+                value={settings.maxUploadSize}
+                onChange={(e) => updateSettings("maxUploadSize", parseInt(e.target.value))}
               />
             </div>
           </CardContent>
@@ -222,16 +259,8 @@ export default function SystemSettingsPage() {
             <div className="space-y-2">
               <Label>SMTP Host</Label>
               <Input
-                value={settings?.emailSettings.smtpHost}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    emailSettings: {
-                      ...settings.emailSettings,
-                      smtpHost: e.target.value,
-                    },
-                  })
-                }
+                value={settings.emailSettings.smtpHost}
+                onChange={(e) => updateEmailSettings({ smtpHost: e.target.value })}
               />
             </div>
 
@@ -239,32 +268,16 @@ export default function SystemSettingsPage() {
               <Label>SMTP Port</Label>
               <Input
                 type="number"
-                value={settings?.emailSettings.smtpPort}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    emailSettings: {
-                      ...settings.emailSettings,
-                      smtpPort: parseInt(e.target.value),
-                    },
-                  })
-                }
+                value={settings.emailSettings.smtpPort}
+                onChange={(e) => updateEmailSettings({ smtpPort: parseInt(e.target.value) })}
               />
             </div>
 
             <div className="space-y-2">
               <Label>SMTP User</Label>
               <Input
-                value={settings?.emailSettings.smtpUser}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    emailSettings: {
-                      ...settings.emailSettings,
-                      smtpUser: e.target.value,
-                    },
-                  })
-                }
+                value={settings.emailSettings.smtpUser}
+                onChange={(e) => updateEmailSettings({ smtpUser: e.target.value })}
               />
             </div>
 
@@ -272,16 +285,25 @@ export default function SystemSettingsPage() {
               <Label>SMTP Password</Label>
               <Input
                 type="password"
-                value={settings?.emailSettings.smtpPassword}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    emailSettings: {
-                      ...settings.emailSettings,
-                      smtpPassword: e.target.value,
-                    },
-                  })
-                }
+                value={settings.emailSettings.smtpPassword}
+                onChange={(e) => updateEmailSettings({ smtpPassword: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>From Email</Label>
+              <Input
+                type="email"
+                value={settings.emailSettings.fromEmail}
+                onChange={(e) => updateEmailSettings({ fromEmail: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>From Name</Label>
+              <Input
+                value={settings.emailSettings.fromName}
+                onChange={(e) => updateEmailSettings({ fromName: e.target.value })}
               />
             </div>
           </CardContent>
@@ -298,16 +320,8 @@ export default function SystemSettingsPage() {
             <div className="space-y-2">
               <Label>Storage Provider</Label>
               <Select
-                value={settings?.storageSettings.provider}
-                onValueChange={(value) =>
-                  setSettings({
-                    ...settings,
-                    storageSettings: {
-                      ...settings.storageSettings,
-                      provider: value,
-                    },
-                  })
-                }
+                value={settings.storageSettings.provider}
+                onValueChange={(value) => updateStorageSettings({ provider: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -323,26 +337,16 @@ export default function SystemSettingsPage() {
             <div className="space-y-2">
               <Label>Bucket Name</Label>
               <Input
-                value={settings?.storageSettings.bucketName}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    storageSettings: {
-                      ...settings.storageSettings,
-                      bucketName: e.target.value,
-                    },
-                  })
-                }
+                value={settings.storageSettings.bucketName}
+                onChange={(e) => updateStorageSettings({ bucketName: e.target.value })}
               />
             </div>
 
             <div className="space-y-2">
               <Label>Backup Frequency</Label>
               <Select
-                value={settings?.backupFrequency}
-                onValueChange={(value) =>
-                  setSettings({ ...settings, backupFrequency: value })
-                }
+                value={settings.backupFrequency}
+                onValueChange={(value) => updateSettings("backupFrequency", value as "hourly" | "daily" | "weekly" | "monthly")}
               >
                 <SelectTrigger>
                   <SelectValue />

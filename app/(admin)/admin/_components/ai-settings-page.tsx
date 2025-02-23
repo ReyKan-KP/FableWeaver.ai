@@ -17,6 +17,7 @@ import {
 import { Sparkles, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
+import { AISettings } from "@/app/types/ai";
 
 export default function AISettingsPage() {
   const [settings, setSettings] = useState<AISettings | null>(null);
@@ -52,12 +53,14 @@ export default function AISettingsPage() {
   }, []);
 
   const handleSave = async (formData: AISettings) => {
+    if (!formData?.id) return;
+    
     setIsSaving(true);
     try {
       const { error } = await supabase
         .from("ai_settings")
         .update(formData)
-        .eq("id", settings?.id);
+        .eq("id", formData.id);
 
       if (error) throw error;
 
@@ -75,6 +78,15 @@ export default function AISettingsPage() {
     }
   };
 
+  const updateSettings = (update: Partial<AISettings>) => {
+    if (!settings?.id) return;
+    setSettings({ ...settings, ...update });
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
@@ -85,8 +97,8 @@ export default function AISettingsPage() {
           </p>
         </div>
         <Button
-          onClick={() => handleSave(settings as AISettings)}
-          disabled={isLoading || isSaving}
+          onClick={() => settings && handleSave(settings)}
+          disabled={isLoading || isSaving || !settings}
           className="bg-gradient-to-r from-violet-500 to-blue-500"
         >
           {isSaving ? (
@@ -116,9 +128,7 @@ export default function AISettingsPage() {
               <Label>Model</Label>
               <Select
                 value={settings?.model}
-                onValueChange={(value) =>
-                  setSettings({ ...settings, model: value })
-                }
+                onValueChange={(value) => updateSettings({ model: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -132,15 +142,13 @@ export default function AISettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Temperature ({settings?.temperature})</Label>
+              <Label>Temperature ({settings?.temperature || 0})</Label>
               <Slider
-                value={[settings?.temperature]}
+                value={[settings?.temperature || 0]}
                 min={0}
                 max={1}
                 step={0.1}
-                onValueChange={([value]) =>
-                  setSettings({ ...settings, temperature: value })
-                }
+                onValueChange={([value]) => updateSettings({ temperature: value })}
               />
             </div>
 
@@ -148,38 +156,35 @@ export default function AISettingsPage() {
               <Label>Max Tokens</Label>
               <Input
                 type="number"
-                value={settings?.maxTokens}
+                value={settings?.maxTokens || 0}
                 onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    maxTokens: parseInt(e.target.value),
-                  })
+                  updateSettings({ maxTokens: parseInt(e.target.value) })
                 }
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Presence Penalty ({settings?.presencePenalty})</Label>
+              <Label>Presence Penalty ({settings?.presencePenalty || 0})</Label>
               <Slider
-                value={[settings?.presencePenalty]}
+                value={[settings?.presencePenalty || 0]}
                 min={0}
                 max={2}
                 step={0.1}
                 onValueChange={([value]) =>
-                  setSettings({ ...settings, presencePenalty: value })
+                  updateSettings({ presencePenalty: value })
                 }
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Frequency Penalty ({settings?.frequencyPenalty})</Label>
+              <Label>Frequency Penalty ({settings?.frequencyPenalty || 0})</Label>
               <Slider
-                value={[settings?.frequencyPenalty]}
+                value={[settings?.frequencyPenalty || 0]}
                 min={0}
                 max={2}
                 step={0.1}
                 onValueChange={([value]) =>
-                  setSettings({ ...settings, frequencyPenalty: value })
+                  updateSettings({ frequencyPenalty: value })
                 }
               />
             </div>
@@ -200,9 +205,9 @@ export default function AISettingsPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={settings?.autoModeration}
+                  checked={settings?.autoModeration || false}
                   onCheckedChange={(checked) =>
-                    setSettings({ ...settings, autoModeration: checked })
+                    updateSettings({ autoModeration: checked })
                   }
                 />
               </div>
@@ -215,9 +220,9 @@ export default function AISettingsPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={settings?.contentFiltering}
+                  checked={settings?.contentFiltering || false}
                   onCheckedChange={(checked) =>
-                    setSettings({ ...settings, contentFiltering: checked })
+                    updateSettings({ contentFiltering: checked })
                   }
                 />
               </div>
@@ -230,9 +235,9 @@ export default function AISettingsPage() {
                   </p>
                 </div>
                 <Switch
-                  checked={settings?.characterConsistency}
+                  checked={settings?.characterConsistency || false}
                   onCheckedChange={(checked) =>
-                    setSettings({ ...settings, characterConsistency: checked })
+                    updateSettings({ characterConsistency: checked })
                   }
                 />
               </div>
@@ -248,9 +253,9 @@ export default function AISettingsPage() {
                 <Label>API Key</Label>
                 <Input
                   type="password"
-                  value={settings?.apiKey}
+                  value={settings?.apiKey || ""}
                   onChange={(e) =>
-                    setSettings({ ...settings, apiKey: e.target.value })
+                    updateSettings({ apiKey: e.target.value })
                   }
                 />
                 <p className="text-sm text-gray-500">

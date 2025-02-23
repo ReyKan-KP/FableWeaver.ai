@@ -851,17 +851,10 @@ export default function CharactersPage() {
         )
       );
 
-      toast({
-        title: "Success",
-        description: "Character visibility request has been rejected",
-      });
+      toast("Character visibility request has been rejected");
     } catch (error) {
       console.error("Error rejecting character:", error);
-      toast({
-        title: "Error",
-        description: "Failed to reject character. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to reject character. Please try again.");
     }
   };
 
