@@ -128,17 +128,17 @@ async function generateChapterContent(prompt: string, retryCount = 0): Promise<a
     }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
     console.log("[POST] Starting chapter generation request");
     const startTime = Date.now();
     
     try {
         // Add overall timeout for the entire operation
-        const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error("Operation timeout")), 58000); // 58 second timeout
+        const timeoutPromise = new Promise<Response>((_, reject) => {
+            setTimeout(() => reject(new Error("Operation timeout")), 290000);
         });
 
-        const operationPromise = (async () => {
+        const operationPromise = (async (): Promise<Response> => {
             // 1. Validate session
             console.log("[POST] Validating session");
             const session = await getServerSession(authOptions);

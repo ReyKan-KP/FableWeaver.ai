@@ -15,17 +15,17 @@ const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash-thinking-exp-01-21",
 });
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
     console.log("[POST] Starting suggestions generation request");
     const startTime = Date.now();
 
     try {
         // Add overall timeout for the entire operation
-        const timeoutPromise = new Promise((_, reject) => {
+        const timeoutPromise = new Promise<Response>((_, reject) => {
             setTimeout(() => reject(new Error("Operation timeout")), 290000); // 290 second timeout
         });
 
-        const operationPromise = (async () => {
+        const operationPromise = (async (): Promise<Response> => {
             // 1. Validate session
             const session = await getServerSession(authOptions);
             if (!session?.user?.id) {
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
             });
 
             // 5. Generate suggestions with timeout
-            const aiTimeoutPromise = new Promise((_, reject) => {
+            const aiTimeoutPromise = new Promise<Response>((_, reject) => {
                 setTimeout(() => reject(new Error("AI generation timeout")), 60000); // 60 second timeout for AI
             });
 
