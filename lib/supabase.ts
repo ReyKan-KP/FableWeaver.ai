@@ -26,8 +26,8 @@ export const updateLastSeen = async (userId: string) => {
     const supabase = createServerSupabaseClient()
 
     await supabase
-        .from('users')
+        .from('user')
         .update({ last_seen: new Date().toISOString() })
-        .eq('id', userId)
+        .eq('user_id', userId)
 }
 

@@ -33,6 +33,8 @@
 - Collaborative filtering for better recommendations
 - Real-time recommendation updates
 
+### Friends
+
 ### 🔐 Secure Authentication
 - Multiple sign-in options (Google & Email)
 - Protected routes and secure sessions

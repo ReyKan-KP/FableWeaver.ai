@@ -9,10 +9,10 @@ import Footer from "@/components/layout/footer";
 import { Analytics } from "@vercel/analytics/react";
 import { AnimatedGradient } from "@/components/ui/animated-gradient";
 import type { Metadata } from "next";
-import { updateLastSeen } from "@/lib/supabase";
-import { createServerSupabaseClient } from "@/lib/supabase";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
+import LastSeenUpdater from "@/components/providers/last-seen-updater";
 const inter = Inter({ subsets: ["latin"] });
+
 
 export const metadata: Metadata = {
   title: "FableWeaver.ai",
@@ -25,15 +25,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // Get the current user's session
-  const supabase = createServerSupabaseClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  // Update last_seen if user is logged in
-  if (session?.user?.id) {
-    await updateLastSeen(session.user.id);
-  }
+ 
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -47,6 +39,7 @@ export default async function RootLayout({
               disableTransitionOnChange
           >
             <Navbar />
+            <LastSeenUpdater />
             <AnimatedGradient />
             <main className="pt-28">
               <Toaster />

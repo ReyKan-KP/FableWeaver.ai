@@ -34,6 +34,8 @@ import {
   NotebookPen,
   Info,
   BookOpen,
+  Handshake,
+  Newspaper
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileMenu } from "./mobile-menu";
@@ -58,6 +60,12 @@ const navItems = [
     href: "/about",
     icon: Info,
     description: "Learn more about FableWeaver.ai and our mission",
+  },
+  {
+    title: "Thread Tapestry",
+    href: "/thread-tapestry",
+    icon: Newspaper,
+    description: "Thread Tapestry is socialhub for storytellers",
   },
   // {
   //   title: "Weave Anime",
@@ -479,6 +487,17 @@ export function Navbar() {
                     {session?.user?.role === "admin"
                       ? "Admin Dashboard"
                       : "Profile"}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={
+                      "/friends"
+                    }
+                    className="flex items-center"
+                  >
+                    <Handshake className="mr-2 h-4 w-4" />
+                    Friends
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem

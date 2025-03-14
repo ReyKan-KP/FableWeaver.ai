@@ -22,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { UserAvatar } from "@/components/user-avatar";
 
 const supabase = createBrowserSupabaseClient();
 
@@ -451,21 +452,15 @@ export default function GroupChatSession() {
                       key={user.user_id}
                       className="flex items-center gap-2 bg-white/50 dark:bg-gray-800/50 rounded-lg p-2"
                     >
-                      <div className="w-8 h-8 rounded-full overflow-hidden">
-                        <Image
-                          src={
-                            userImages[user.user_id ?? ""] ||
-                            "/images/default-avatar.png"
-                          }
-                          alt={user.user_name}
-                          width={32}
-                          height={32}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      <UserAvatar
+                        userId={user.user_id ?? ""}
+                        userName={user.user_name}
+                        avatarUrl={userImages[user.user_id ?? ""]}
+                        size="sm"
+                      />
+                      <Link href={`/user/${user.user_name}`} className="text-sm font-medium text-gray-700 dark:text-gray-200 hover:underline">
                         {user.user_name}
-                      </span>
+                      </Link>
                     </div>
                   ))}
                 </div>

@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { theme } from "@/styles/theme";
+import LastSeenUpdater from "@/components/providers/last-seen-updater";
 
 export default function AuthLayout({
   children,
@@ -26,6 +27,7 @@ export default function AuthLayout({
         exit={{ opacity: 0 }}
         className="min-h-screen"
       >
+        <LastSeenUpdater />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
