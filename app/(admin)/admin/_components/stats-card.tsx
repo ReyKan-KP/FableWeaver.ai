@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { springTransition } from "./animation-variants";
 import { LucideIcon } from "lucide-react";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { toast } from "sonner";
 
 interface StatsCardProps {
   title: string;
@@ -23,11 +24,21 @@ export function StatsCard({
   color,
   description
 }: StatsCardProps) {
+  
+  const handleCardClick = () => {
+    toast.info(`${title} Details`, {
+      description: `Current value: ${value.toLocaleString()} (${trend === "up" ? "+" : "-"}${trendValue})`,
+      icon: <Icon style={{ color }} />,
+    });
+  };
+  
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -5 }}
       whileTap={{ scale: 0.98 }}
       transition={springTransition}
+      onClick={handleCardClick}
+      className="cursor-pointer"
     >
       <Card className="overflow-hidden relative">
         <motion.div

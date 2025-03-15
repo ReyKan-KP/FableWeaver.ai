@@ -26,7 +26,7 @@ const FeatureAnimation1 = () => {
         whileTap={{ scale: 0.95 }}
       >
         <motion.div
-          className="w-full bg-background h-10 rounded-full px-5 flex items-center justify-end"
+          className="w-full bg-background/20 h-12 rounded-full px-5 flex items-center justify-end"
           initial={{ width: 0 }}
           animate={{ width: "100%" }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -58,7 +58,7 @@ const FeatureAnimation1 = () => {
           className="rounded-full bg-gradient-to-r from-violet-500 to-blue-500"
         />
         <motion.div
-          className="w-full  h-10 rounded-full bg-background px-5 flex items-center text-left"
+          className="w-full h-12 rounded-full bg-background/20 px-5 flex items-center text-left"
           initial={{ width: 0 }}
           animate={{ width: "100%" }}
           transition={{ duration: 0.5, delay: 0.7 }}
@@ -132,6 +132,66 @@ const FeatureAnimation5 = () => {
     </motion.div>
   );
 };
+const FeatureAnimation8 = () => {
+  return (
+    <motion.div
+      className="flex flex-1 w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] flex-col"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.05 }}
+    >
+      <Image
+        src="/images/handshake-feature.gif"
+        alt="Feature icon"
+        width={340}
+        height={320}
+        className="w-full h-full rounded-lg object-cover bg-gradient-to-br from-violet-500 via-blue-500 to-teal-500 animate-gradient-xy flex items-center justify-center"
+        unoptimized={true}
+      />
+    </motion.div>
+  );
+};
+const FeatureAnimation9 = () => {
+  return (
+    <motion.div
+      className="flex flex-1 w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] flex-col"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.05 }}
+    >
+      <Image
+        src="/images/threads-feature.gif"
+        alt="Feature icon"
+        width={340}
+        height={320}
+        className="w-full h-full rounded-lg object-cover bg-gradient-to-br from-violet-500 via-blue-500 to-teal-500 animate-gradient-xy flex items-center justify-center"
+        unoptimized={true}
+      />
+    </motion.div>
+  );
+};
+const FeatureAnimation10 = () => {
+  return (
+    <motion.div
+      className="flex flex-1 w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] flex-col"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.05 }}
+    >
+      <Image
+        src="/images/fable-feature.gif"
+        alt="Feature icon"
+        width={340}
+        height={320}
+        className="w-full h-full rounded-lg object-cover bg-gradient-to-br from-violet-500 via-blue-500 to-teal-500 animate-gradient-xy flex items-center justify-center"
+        unoptimized={true}
+      />
+    </motion.div>
+  );
+};
 
 const FeatureAnimation6 = () => {
   return (
@@ -187,7 +247,7 @@ const FeatureAnimation7 = () => {
     <motion.div
       initial="initial"
       animate="animate"
-      className="flex flex-1 w-full h-full min-h-[6rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] rounded-xl p-4 gap-4"
+      className="flex flex-1 w-full h-full min-h-[10rem] dark:bg-dot-white/[0.2] bg-dot-black/[0.2] rounded-xl px-4"
     >
       {characters.map((character, index) => (
         <motion.div
@@ -195,7 +255,7 @@ const FeatureAnimation7 = () => {
           custom={index - 1}
           variants={cardVariants}
           className={cn(
-            "h-full flex-1 rounded-2xl   dark:border-white/[0.1] border-neutral-200",
+            "h-full flex-1 rounded-2xl dark:border-white/[0.1] border-neutral-200",
             "flex items-center justify-center overflow-hidden cursor-pointer",
             "transition-colors hover:bg-[#d2e1fe] dark:hover:bg-neutral-900"
           )}
@@ -203,7 +263,7 @@ const FeatureAnimation7 = () => {
           onHoverEnd={() => setHoveredCard(null)}
         >
           <motion.div
-            className="w-full h-full relative"
+            className="w-full h-full"
             initial="front"
             animate={hoveredCard === index ? "back" : "front"}
             variants={flipVariants}
@@ -215,7 +275,7 @@ const FeatureAnimation7 = () => {
                 src={character.image || "/placeholder.svg"}
                 alt={character.name}
                 fill
-                className="object-cover rounded-3xl"
+                className="object-contain scale-150 rounded-3xl"
               />
             </div>
             {/* <div
@@ -270,44 +330,61 @@ const AnimatedDescription = ({ children }: { children: React.ReactNode }) => {
 
 const items = [
   {
-    title: "AI Character Creation",
+    title: "Character Realm",
     description:
-      "Create unique characters with rich personalities, backstories, and traits that come to life through advanced AI",
+      "Forge unique AI companions with rich personalities, backstories, and traits that evolve through your interactions and breathe life into your stories",
     header: <FeatureAnimation1 />,
     className: "md:col-span-2",
     icon: <Sparkles className="h-4 w-4 text-violet-500" />,
   },
   {
-    title: "Smart Recommendations",
+    title: "Lore Lens",
     description:
-      "Get personalized anime suggestions based on your preferences, watch history, and story interests",
-    header: <FeatureAnimation2 />,
+      "Discover perfect content tailored to your tastes with our AI-powered recommendation engine that learns from your preferences and reading history",
+    header: <FeatureAnimation5 />,
     className: "md:col-span-1",
     icon: <Brain className="h-4 w-4 text-blue-500" />,
   },
   {
-    title: "Character Confluence",
+    title: "Thread Tapestry",
     description:
-      "Experience dynamic group chats where multiple AI characters interact with each other and users naturally",
-    header: <FeatureAnimation7 />,
+      "Weave conversations with the community in a vibrant social space where stories, theories, and discussions come alive through interactive threads",
+    header: <FeatureAnimation9 />,
     className: "md:col-span-1",
-    icon: <Palette className="h-4 w-4 text-violet-500" />,
+    icon: <Sparkles className="h-4 w-4 text-violet-500" />,
   },
+  
   {
-    title: "Story Weaving",
+    title: "Story Weaver",
     description:
-      "Craft immersive narratives with AI assistance, blending your creativity with intelligent story generation and chapter management",
+      "Craft epic narratives with AI assistance that enhances your creativity, helping you build immersive worlds chapter by chapter with intelligent story generation",
     header: <FeatureAnimation6 />,
     className: "md:col-span-1",
     icon: <Bot className="h-4 w-4 text-violet-500" />,
   },
   {
-    title: "Personalized History",
+    title: "Fable Sanctum",
     description:
-      "Your watch history and character interactions shape future recommendations and experiences",
-    header: <FeatureAnimation5 />,
+      "Explore a curated collection of published stories from fellow creators, discovering new worlds and adventures crafted by the community",
+    header: <FeatureAnimation10 />,
     className: "md:col-span-1",
     icon: <History className="h-4 w-4 text-blue-500" />,
+  },
+  {
+    title: "Tale Tethers",
+    description:
+      "Build meaningful connections with fellow storytellers and readers, sharing your creative journey through real-time chats and collaborative storytelling",
+    header: <FeatureAnimation8 />,
+    className: "md:col-span-1",
+    icon: <History className="h-4 w-4 text-blue-500" />,
+  },
+  {
+    title: "Character Confluence",
+    description:
+      "Experience magical group interactions where multiple AI characters and your friends converse with each other and, creating dynamic and unpredictable storytelling moments",
+    header: <FeatureAnimation7 />,
+    className: "md:col-span-2",
+    icon: <Palette className="h-4 w-4 text-violet-500" />,
   },
 ];
 

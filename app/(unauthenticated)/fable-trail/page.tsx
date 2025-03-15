@@ -36,7 +36,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
+import Loading from "./loading";
 interface Novel {
   id: string;
   title: string;
@@ -172,15 +172,21 @@ export default function ReadNovelPage() {
   };
 
   return (
-    <div className="">
-      <div className="max-w-7xl mx-auto p-6">
-        <motion.div
+    isLoading ? (
+      <Loading />
+    ) : (
+      <div className="">
+        <div className="max-w-7xl mx-auto p-6">
+          <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 p-2 rounded-lg">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
                   Fable Sanctum
@@ -504,5 +510,6 @@ export default function ReadNovelPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
   );
 }

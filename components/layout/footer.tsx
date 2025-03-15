@@ -19,8 +19,13 @@ import {
   ExternalLink,
   Linkedin,
   Loader2,
+  Wand2,
+  Handshake,
+  Search,
+  NotebookPen
 } from "lucide-react";
 import { toast } from "sonner";
+import { CgFeed as FeedIcon } from "react-icons/cg";
 
 interface FooterLink {
   href: string;
@@ -69,16 +74,17 @@ const Footer = () => {
     {
       title: "Create",
       links: [
-        { href: "/story-weaver", label: "Story Weaver", icon: BookOpen },
+        { href: "/story-weaver", label: "Story Weaver", icon:  NotebookPen, },
         { href: "/character-realm", label: "Character Realm", icon: Bot },
-        { href: "/weave-anime", label: "Weave Anime", icon: Tv },
+        { href: "/lore-lens", label: "Lore Lens", icon: Wand2 },
+        { href: "/fable-trail", label: "Fable Sanctum", icon: BookOpen },
       ],
     },
     {
       title: "Connect",
       links: [
-        { href: "/contact", label: "Contact Us", icon: MessageSquare },
-        { href: "/character-realm", label: "Character Realm", icon: Bot },
+        { href: "/thread-tapestry", label: "Thread Tapestry", icon: FeedIcon },
+        { href: "/tale-tethers", label: "Tale Tethers", icon: Handshake },
         {
           href: "/character-confluence",
           label: "Character Confluence",
@@ -89,10 +95,12 @@ const Footer = () => {
     {
       title: "Company",
       links: [
-        { href: "/about", label: "About Us" },
+        { href: "/about", label: "About Us", icon: User },
+        { href: "/contact", label: "Contact Us", icon: MessageSquare },
         {
           href: "https://portfolio-kanishaka-pranjal.vercel.app/",
           label: "Portfolio",
+          icon: ExternalLink,
         },
       ],
     },
@@ -132,8 +140,7 @@ const Footer = () => {
               FableWeaver.ai
             </h2>
             <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground">
-              Unleash your creativity with AI-powered storytelling. Create
-              characters, weave tales, and explore new worlds.
+              Craft your narrative universe with AI-powered storytelling. Create characters, weave tales, and connect with fellow creators.
             </p>
           </motion.div>
 
@@ -147,10 +154,10 @@ const Footer = () => {
             <div className=" backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-border">
               <h3 className="text-base sm:text-lg font-semibold mb-2 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                Stay Updated
+                Join the Storytelling Community
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-                Join our newsletter for the latest updates and features.
+                Subscribe for creative tips, feature updates, and storytelling inspiration.
               </p>
               <form
                 onSubmit={handleSubscribe}
@@ -208,7 +215,7 @@ const Footer = () => {
                         <link.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:text-primary transition-colors duration-200" />
                       )}
                       {link.label}
-                      {!link.icon && (
+                      {link.href.startsWith("http") && (
                         <ExternalLink className="w-3 h-3 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
                       )}
                     </Link>

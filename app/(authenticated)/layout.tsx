@@ -27,7 +27,7 @@ export default function AuthLayout({
         exit={{ opacity: 0 }}
         className="min-h-screen"
       >
-        <LastSeenUpdater />
+        {/* <LastSeenUpdater /> */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -38,7 +38,7 @@ export default function AuthLayout({
             stiffness: 100,
             damping: 20,
           }}
-          className="container mx-auto px-4 py-8 pt-16"
+          className="container mx-auto px-4 py-8 pt-24"
         >
           <motion.div
             className="relative z-10 w-full max-w-7xl mx-auto"

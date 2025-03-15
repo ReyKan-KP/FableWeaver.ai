@@ -3,10 +3,13 @@
 ## Table of Contents
 - [Overview](#overview)
 - [Core Features](#core-features)
-  - [Character Creation & Interaction](#character-creation--interaction)
-  - [Story Generation](#story-generation)
-  - [Recommendation System](#recommendation-system)
-  - [User Experience](#user-experience)
+  - [Character Realm](#character-realm)
+  - [Story Weaver](#story-weaver)
+  - [Lore Lens](#lore-lens)
+  - [Fable Sanctum](#fable-sanctum)
+  - [Thread Tapestry](#thread-tapestry)
+  - [Tale Tethers](#tale-tethers)
+  - [Character Confluence](#character-confluence)
 - [Story Weaving Engine Deep Dive](#story-weaving-engine-deep-dive)
 - [Technical Architecture](#technical-architecture)
 - [User Guides](#user-guides)
@@ -18,14 +21,17 @@ FableWeaver.ai is an innovative AI-powered platform that revolutionizes storytel
 
 ### Key Concepts
 
-1. **Character Realms**: Personal spaces where users create and manage their story characters
+1. **Character Realm**: Personal spaces where users create and manage their story characters
 2. **Character Confluence**: A unique feature enabling multi-character interactions
-3. **Story Weaving**:  Advanced story generation and chapter management system
-4. **Adaptive Recommendations**: Personalized content suggestions based on user preferences
+3. **Story Weaving**: Advanced story generation and chapter management system
+4. **Lore Lens**: Personalized content recommendations based on user preferences
+5. **Thread Tapestry**: Community interaction through interactive threads
+6. **Tale Tethers**: Connections with fellow storytellers and readers
+7. **Fable Sanctum**: Curated collection of published stories
 
 ## Core Features
 
-### Character Creation & Interaction
+### Character Realm
 
 #### Character Creation System
 - **Personality Definition**: 
@@ -48,9 +54,7 @@ FableWeaver.ai is an innovative AI-powered platform that revolutionizes storytel
   - Character growth metrics
   - Interaction history logging
 
-### Story Generation
-
-### Story Weaving Engine
+### Story Weaver
 
 #### Dynamic Story Generation
 - **AI-Powered Content Creation**:
@@ -79,52 +83,87 @@ FableWeaver.ai is an innovative AI-powered platform that revolutionizes storytel
   - Table of contents generation
   - Metadata preservation
 
+### Lore Lens
+
+#### Recommendation Engine
+- **Personalized Suggestions**:
+  - Content tailored to user tastes
+  - AI-powered recommendation system
+  - Learning from preferences and reading history
+  - Genre and style matching
+
+#### Content Discovery
+- **Smart Filtering**:
+  - Interest-based content discovery
+  - Similar content recommendations
+  - Trending and popular content highlights
+  - New release notifications
+
+### Fable Sanctum
+
+#### Story Collection
+- **Curated Library**:
+  - Published stories from community creators
+  - Categorized by genre, theme, and popularity
+  - Featured and trending stories
+  - Reading progress tracking
+
+#### Reading Experience
+- **Immersive Interface**:
+  - Distraction-free reading mode
+  - Customizable font and display settings
+  - Bookmarking and annotation tools
+  - Reading statistics and history
+
+### Thread Tapestry
+
+#### Community Interaction
+- **Social Storytelling**:
+  - Vibrant community discussion space
+  - Interactive threads for stories and theories
+  - Topic-based conversations
+  - Real-time updates and notifications
+
+#### Content Sharing
+- **Creative Exchange**:
+  - Story snippet sharing
+  - Character showcases
+  - Writing prompts and challenges
+  - Feedback and critique opportunities
+
+### Tale Tethers
+
+#### Connection Building
+- **Storyteller Network**:
+  - Connect with fellow writers and readers
+  - Share creative journeys
+  - Collaborative storytelling opportunities
+  - Interest-based matching
+
+#### Real-time Communication
+- **Interactive Messaging**:
+  - Direct messaging system
+  - Group conversations
+  - Media and file sharing
+  - Activity status and typing indicators
+
+### Character Confluence
+
+#### Multi-Character Interactions
+- **Group Dynamics**:
+  - Multiple AI characters interacting simultaneously
+  - Friend inclusion in character conversations
+  - Dynamic and unpredictable storytelling moments
+  - Character relationship development
 
 #### Collaborative Storytelling
-- **Multi-Character Interactions**:
-  - Character relationship dynamics
-  - Inter-character dialogue generation
-  - Story branching and merging
-  - Real-time story adaptation
+- **Multi-User Creation**:
+  - Shared story worlds
+  - Character crossovers
+  - Collaborative writing sessions
+  - Role-playing scenarios
 
-### Recommendation System
-
-#### Content Recommendation Engine
-- **Personalized Suggestions**:
-  - Character recommendations based on user preferences
-  - Story genre matching
-  - Similar character discovery
-  - Content popularity analysis
-
-#### Watch History Analysis
-- **User Preference Learning**:
-  - Interaction pattern analysis
-  - Genre preference tracking
-  - Character type affinity
-  - Engagement metrics
-
-#### Collaborative Filtering
-- **Advanced Matching**:
-  - User similarity matching
-  - Content-based filtering
-  - Hybrid recommendation algorithms
-  - Real-time preference updates
-
-### User Experience
-
-#### Interface Design
-- **Responsive UI**:
-  - Mobile-first design
-  - Dark/Light theme support
-  - Accessibility features
-  - Intuitive navigation
-
-#### Interactive Elements
-- **Dynamic Components**:
-  - Animated transitions
-  - Real-time updates
-  - Progress indicators
-  - Interactive tutorials
+## Story Weaving Engine Deep Dive
 
 ## Technical Architecture
 

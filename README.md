@@ -2,7 +2,7 @@
 
 <p align="center">
   <h3 align="center">Where AI Weaves Your Story Universe</h3>
-  <p align="center">An innovative AI-powered platform for creating and interacting with dynamic story characters and personalized story recommendations.</p>
+  <p align="center">An innovative AI-powered platform for creating and interacting with dynamic story characters and personalized story experiences.</p>
 </p>
 
 <p align="center">
@@ -16,24 +16,47 @@
 
 ## ✨ Features
 
-### 🤖 AI-Powered Character Interactions
-- Dynamic character conversations with context awareness
-- Real-time message exchange with animated responses
-- Character personality persistence across sessions
-
 ### 🎭 Character Realm
-- Create and customize unique story characters
-- Character confluence for multi-character interactions
-- Interactive character showcases
+- Create and customize unique AI companions with rich personalities
+- Define detailed backstories and character traits
+- Watch characters evolve through your interactions
+- Breathe life into your stories with dynamic characters
 
-### 🎯 Smart Recommendation System
-- Personalized story and character suggestions
-- AI-driven content curation based on user preferences
-- Watch history tracking and analysis
-- Collaborative filtering for better recommendations
-- Real-time recommendation updates
+### 📚 Story Weaver
+- Craft epic narratives with AI assistance that enhances your creativity
+- Build immersive worlds chapter by chapter with intelligent story generation
+- Manage your creative works with advanced organization tools
+- Export your stories in multiple formats
 
-### Friends
+### 🔮 Lore Lens
+- Discover perfect content tailored to your tastes
+- AI-powered recommendation engine that learns from your preferences
+- Find new stories and characters based on your reading history
+- Explore content matching your interests and style preferences
+
+### 📖 Fable Sanctum
+- Explore a curated collection of published stories from fellow creators
+- Discover new worlds and adventures crafted by the community
+- Track your reading progress across different stories
+- Immerse yourself in a distraction-free reading experience
+
+### 🧵 Thread Tapestry
+- Weave conversations with the community in a vibrant social space
+- Participate in interactive threads for stories, theories, and discussions
+- Share creative content and receive feedback
+- Stay updated with real-time notifications
+
+### 🤝 Tale Tethers
+- Build meaningful connections with fellow storytellers and readers
+- Share your creative journey through real-time chats
+- Engage in collaborative storytelling opportunities
+- Find like-minded creators through interest-based matching
+
+### 🌐 Character Confluence
+- Experience magical group interactions with multiple AI characters
+- Include your friends in character conversations
+- Create dynamic and unpredictable storytelling moments
+- Develop complex character relationships in a shared space
 
 ### 🔐 Secure Authentication
 - Multiple sign-in options (Google & Email)
@@ -63,7 +86,6 @@
 ### Prerequisites
 
 - Node.js 18+
-- Python 3.8+
 - npm or yarn
 - Git
 
@@ -91,7 +113,14 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_API_KEY=your_google_ai_api_key
+SERPER_API_KEY=your_serper_api_key_here  # For image search functionality
 ```
+
+4. Get a Serper API key
+   - Sign up at [Serper.dev](https://serper.dev/)
+   - Get your API key from the dashboard
+   - Add it to your .env.local file
 
 5. Run the development server
 ```bash
@@ -100,7 +129,7 @@ npm run dev   # or yarn dev
 
 Visit [http://localhost:3000](http://localhost:3000) to see your app.
 
-## 📁 Project Structure
+<!-- ## 📁 Project Structure
 
 ```
 ├── app/
@@ -124,7 +153,7 @@ Visit [http://localhost:3000](http://localhost:3000) to see your app.
     ├── types.ts           # Shared types
     ├── recommendation.ts  # Recommendation engine logic
     └── utils.ts           # Utilities
-```
+``` -->
 
 ## 💻 Development
 
@@ -133,11 +162,6 @@ Visit [http://localhost:3000](http://localhost:3000) to see your app.
 - Follow component-based architecture
 - Implement proper error handling
 - Maintain consistent styling with Tailwind CSS
-
-### Running Tests
-```bash
-npm run test   # or yarn test
-```
 
 ### Linting
 ```bash
@@ -154,8 +178,8 @@ Ensure these environment variables are set in your deployment:
 - `GOOGLE_CLIENT_SECRET`
 - `NEXTAUTH_URL`
 - `NEXTAUTH_SECRET`
-- `RECOMMENDATION_API_KEY`  # For recommendation system
-- `AI_MODEL_ENDPOINT`       # For AI model integration
+- `GOOGLE_API_KEY`       # For Google AI model integration
+- `SERPER_API_KEY`       # For image search functionality
 
 ## 📄 License
 

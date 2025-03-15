@@ -22,6 +22,7 @@ import { Search, Eye, History } from "lucide-react";
 import { formatDistance } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
 
 interface ChapterRevision {
   id: string;
@@ -48,6 +49,7 @@ export default function RevisionsPage() {
 
   const fetchRevisions = async () => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from("chapter_revisions")
         .select(`
@@ -70,8 +72,14 @@ export default function RevisionsPage() {
       }));
 
       setRevisions(processedData);
+      toast.success("Revisions loaded successfully", {
+        description: `${processedData.length} revisions found`,
+      });
     } catch (error) {
       console.error("Error fetching revisions:", error);
+      toast.error("Failed to load revisions", {
+        description: "Please try again later",
+      });
     } finally {
       setIsLoading(false);
     }

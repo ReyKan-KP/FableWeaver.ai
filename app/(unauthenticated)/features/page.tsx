@@ -19,6 +19,10 @@ import {
   Pencil,
   BookText,
   Clock,
+  UserPlus,
+  Brain,
+  History,
+  Bot,
 } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -31,7 +35,7 @@ import { useRouter } from "next/navigation";
 const features = [
   {
     title: "Story Weaver",
-    description: "A powerful novel writing and management system",
+    description: "Craft epic narratives with AI assistance that enhances your creativity",
     icon: <BookOpen className="h-8 w-8 text-violet-500" />,
     color: "violet",
     demo: (
@@ -95,18 +99,17 @@ const features = [
       </div>
     ),
     features: [
-      "Create and organize multiple novels with chapters",
-      "Real-time progress tracking and word count",
-      "Export novels in multiple formats (PDF, EPUB)",
-      "Collaborative writing with team management",
-      "Auto-save and version history",
-      "Rich text editor with formatting tools",
+      "Build immersive worlds chapter by chapter with intelligent story generation",
+      "Real-time progress tracking and word count statistics",
+      "Export novels in multiple formats for sharing or publishing",
+      "AI-powered plot and character development suggestions",
+      "Auto-save and version history to never lose your creative work",
+      "Rich text editor with formatting tools for professional manuscripts",
     ],
   },
   {
-    title: "Fable Trail",
-    description:
-      "Immerse yourself in a world of stories with our novel reading platform",
+    title: "Fable Sanctum",
+    description: "Explore a curated collection of published stories from fellow creators",
     icon: <BookOpen className="h-8 w-8 text-emerald-500" />,
     color: "emerald",
     demo: (
@@ -187,17 +190,17 @@ const features = [
       </div>
     ),
     features: [
-      "Discover and read captivating stories",
-      "Smart filtering and search capabilities",
-      "Track reading progress across novels",
-      "Personalized reading statistics",
-      "Bookmark favorite chapters",
-      "Offline reading support",
+      "Discover new worlds and adventures crafted by the community",
+      "Advanced filtering and search to find stories matching your interests",
+      "Track reading progress and maintain a personal reading history",
+      "Personalized recommendations based on your reading preferences",
+      "Bookmark favorite chapters and stories for easy access",
+      "Engage with authors through comments and ratings",
     ],
   },
   {
     title: "Character Realm",
-    description: "Create and manage detailed character profiles",
+    description: "Forge unique AI companions with rich personalities and backstories",
     icon: <Users className="h-8 w-8 text-blue-500" />,
     color: "blue",
     demo: (
@@ -256,276 +259,326 @@ const features = [
       </div>
     ),
     features: [
-      "Create detailed character profiles with rich metadata",
-      "Public and private character sharing",
-      "Character relationships and connections",
-      "Trait and ability management",
-      "Character development tracking",
-      "Import/export character data",
+      "Create and customize unique AI companions with rich personalities",
+      "Define detailed backstories and character traits",
+      "Watch characters evolve through your interactions",
+      "Breathe life into your stories with dynamic characters",
+      "Personalize character voices and visual appearances",
+      "Track character relationships and development over time",
     ],
   },
   {
-    title: "Character Confluence",
-    description:
-      "Collaborate in real-time with AI-enhanced story development tools",
-    icon: <MessageSquare className="h-8 w-8 text-green-500" />,
-    color: "green",
+    title: "Lore Lens",
+    description: "Discover perfect content tailored to your tastes with our AI-powered recommendation engine",
+    icon: <Brain className="h-8 w-8 text-purple-500" />,
+    color: "purple",
     demo: (
-      <div className="h-full w-full bg-white/5 backdrop-blur-sm rounded-xl p-6 flex flex-col">
+      <div className="h-full w-full bg-white/5 backdrop-blur-sm rounded-xl p-6 space-y-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold">Story Development Hub</h3>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline">Crystal Chronicles Team</Badge>
-              <Badge variant="secondary">Live Session</Badge>
-            </div>
+            <h3 className="text-lg font-semibold">Recommendations</h3>
+            <p className="text-sm text-muted-foreground">
+              Tailored to Your Preferences
+            </p>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline">
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Analysis
-            </Button>
-            <Button size="sm" variant="outline">
-              <Plus className="w-4 h-4 mr-2" />
-              Invite
-            </Button>
-          </div>
+          <Button size="sm" variant="outline">
+            <Filter className="w-4 h-4 mr-2" />
+            Refine
+          </Button>
         </div>
-        <ScrollArea className="flex-1 w-full rounded-lg border border-white/10 p-4 mb-4">
-          <div className="space-y-4">
-            <div className="flex gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>AI</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 p-3 rounded-lg bg-violet-500/10">
-                <p className="text-sm font-medium">Story Analysis</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  The crystal artifact discovery could create an interesting
-                  parallel with Elena&apos;s inner conflict. Consider exploring
-                  how its power mirrors her own untapped potential.
-                </p>
+        <div className="grid gap-4">
+          <div className="p-4 rounded-lg bg-white/10">
+            <div className="flex gap-3 items-start">
+              <div className="w-16 h-16 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-purple-500" />
               </div>
-            </div>
-            <div className="flex gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>SL</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 p-3 rounded-lg bg-white/5">
-                <p className="text-sm font-medium">Plot Development</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  That&apos;s brilliant! We could use this to foreshadow her
-                  role in the prophecy.
+              <div className="flex-1">
+                <h4 className="font-medium">Based on your preferences</h4>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Fantasy stories with strong character development
                 </p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback>AI</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 p-3 rounded-lg bg-violet-500/10">
-                <p className="text-sm font-medium">Suggested Plot Points</p>
-                <div className="mt-2 space-y-1">
-                  <Badge variant="outline" className="mr-2">
-                    Crystal Resonance
-                  </Badge>
-                  <Badge variant="outline" className="mr-2">
-                    Hidden Powers
-                  </Badge>
-                  <Badge variant="outline">Ancient Prophecy</Badge>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary">Epic Fantasy</Badge>
+                  <Badge variant="secondary">Character-Driven</Badge>
                 </div>
               </div>
             </div>
           </div>
-        </ScrollArea>
-        <div className="flex gap-2">
-          <Input placeholder="Share your ideas..." className="flex-1" />
-          <Button size="icon" variant="secondary">
-            <Sparkles className="h-4 w-4" />
-          </Button>
-          <Button size="icon">
-            <Send className="h-4 w-4" />
-          </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-lg bg-white/10">
+              <h5 className="text-sm font-medium mb-2">Reading History</h5>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  12 stories this month
+                </span>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-white/10">
+              <h5 className="text-sm font-medium mb-2">Top Genre</h5>
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-purple-500" />
+                <span className="text-xs">Fantasy (65%)</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     ),
     features: [
-      "AI-powered story development suggestions",
-      "Real-time collaborative brainstorming",
-      "Intelligent plot analysis and recommendations",
-      "Character interaction simulations",
-      "Automated plot consistency checking",
-      "Smart scene planning assistance",
+      "AI-powered recommendation engine that learns from your preferences",
+      "Find new stories and characters based on your reading history",
+      "Explore content matching your interests and style preferences",
+      "Discover trending and popular content in your favorite genres",
+      "Receive personalized suggestions for new reading material",
+      "Track your preferences and reading patterns over time",
     ],
   },
   {
-    title: "Weave Anime",
-    description:
-      "Create stunning anime-style art with our advanced AI generation system",
-    icon: <Palette className="h-8 w-8 text-pink-500" />,
+    title: "Thread Tapestry",
+    description: "Weave conversations with the community in a vibrant social space",
+    icon: <MessageSquare className="h-8 w-8 text-indigo-500" />,
+    color: "indigo",
+    demo: (
+      <div className="h-full w-full bg-white/5 backdrop-blur-sm rounded-xl p-6 space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">Community Threads</h3>
+            <p className="text-sm text-muted-foreground">
+              Join the Conversation
+            </p>
+          </div>
+          <Button size="sm" variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            New Thread
+          </Button>
+        </div>
+        <div className="space-y-4">
+          <div className="p-4 rounded-lg bg-white/10">
+            <div className="flex justify-between items-start mb-2">
+              <h4 className="font-medium">Character Development Tips</h4>
+              <Badge variant="secondary">Trending</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Share your best practices for creating memorable characters
+            </p>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  {[1, 2, 3].map((i) => (
+                    <Avatar
+                      key={i}
+                      className="h-5 w-5 border-2 border-background"
+                    >
+                      <AvatarFallback>U{i}</AvatarFallback>
+                    </Avatar>
+                  ))}
+                </div>
+                <span>42 participants</span>
+              </div>
+              <span>Last reply 5m ago</span>
+            </div>
+          </div>
+          <div className="p-4 rounded-lg bg-white/10">
+            <div className="flex justify-between items-start mb-2">
+              <h4 className="font-medium">Weekly Writing Prompt</h4>
+              <Badge variant="outline">Active</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              &quot;A character discovers a hidden door in their home that wasn&apos;t there yesterday...&quot;
+            </p>
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                <span>28 responses</span>
+              </div>
+              <span>Ends in 3 days</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+    features: [
+      "Participate in interactive threads for stories, theories, and discussions",
+      "Share creative content and receive feedback from the community",
+      "Join topic-based conversations about writing and storytelling",
+      "Stay updated with real-time notifications on your threads",
+      "Create and moderate your own discussion topics",
+      "Connect with like-minded creators through shared interests",
+    ],
+  },
+  {
+    title: "Tale Tethers",
+    description: "Build meaningful connections with fellow storytellers and readers",
+    icon: <UserPlus className="h-8 w-8 text-pink-500" />,
     color: "pink",
     demo: (
       <div className="h-full w-full bg-white/5 backdrop-blur-sm rounded-xl p-6 space-y-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold">Character Visualization</h3>
+            <h3 className="text-lg font-semibold">Connections</h3>
             <p className="text-sm text-muted-foreground">
-              AI Art Generation Studio
+              Your Creative Network
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Enhance
-            </Button>
-            <Button size="sm" variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">
-                Character Description
-              </label>
-              <ScrollArea className="h-[80px] w-full rounded-lg border border-white/10 p-3 mt-2">
-                <p className="text-sm text-muted-foreground">
-                  Elena Blackwood, a young mage with flowing silver hair and
-                  ethereal violet eyes. Her elegant robes feature intricate
-                  crystal patterns that shimmer with magical energy.
-                </p>
-              </ScrollArea>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Style Settings</label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <Badge variant="secondary">Anime</Badge>
-                <Badge variant="secondary">Magical</Badge>
-                <Badge variant="outline">Detailed</Badge>
-                <Badge variant="outline">Dynamic</Badge>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Generation Progress</label>
-              <div className="mt-2 space-y-2">
-                <div className="h-2 rounded bg-pink-500/20">
-                  <div className="h-full w-2/3 rounded bg-pink-500 animate-pulse" />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Generating variations...
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/30 via-pink-500/30 to-blue-500/30 rounded-lg animate-pulse" />
-            <div className="relative h-full border-2 border-dashed border-white/20 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <Sparkles className="w-8 h-8 mx-auto mb-2 text-pink-500 animate-pulse" />
-                <p className="text-sm text-muted-foreground">
-                  AI Processing...
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="pt-4 border-t border-white/10">
-          <Button className="w-full bg-gradient-to-r from-pink-500 to-purple-500">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Generate Variations
+          <Button size="sm" variant="outline">
+            <Search className="w-4 h-4 mr-2" />
+            Find Creators
           </Button>
+        </div>
+        <div className="space-y-4">
+          <div className="p-4 rounded-lg bg-white/10">
+            <div className="flex gap-3 items-center">
+              <Avatar className="h-12 w-12 border-2 border-pink-500/20">
+                <AvatarFallback>EW</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h4 className="font-medium">Emma Wright</h4>
+                <p className="text-sm text-muted-foreground">
+                  Fantasy Author • 12 stories published
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    Similar Interests
+                  </Badge>
+                </div>
+              </div>
+              <Button size="sm" variant="outline">
+                <MessageSquare className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="p-4 rounded-lg bg-white/10">
+            <div className="flex gap-3 items-center">
+              <Avatar className="h-12 w-12 border-2 border-pink-500/20">
+                <AvatarFallback>JL</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h4 className="font-medium">James Lee</h4>
+                <p className="text-sm text-muted-foreground">
+                  Sci-Fi Writer • Collaborative projects
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    Active Now
+                  </Badge>
+                </div>
+              </div>
+              <Button size="sm" variant="outline">
+                <MessageSquare className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="pt-3 border-t border-white/10">
+          <h4 className="text-sm font-medium mb-2">Suggested Connections</h4>
+          <div className="flex -space-x-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Avatar
+                key={i}
+                className="h-8 w-8 border-2 border-background"
+              >
+                <AvatarFallback>U{i}</AvatarFallback>
+              </Avatar>
+            ))}
+            <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs">
+              +12
+            </div>
+          </div>
         </div>
       </div>
     ),
     features: [
-      "Advanced AI art generation engine",
-      "Natural language character description",
-      "Multiple style and mood options",
-      "Real-time art generation preview",
-      "Batch processing and variations",
-      "High-resolution export options",
+      "Share your creative journey through real-time chats with other creators",
+      "Engage in collaborative storytelling opportunities",
+      "Find like-minded creators through interest-based matching",
+      "Build a network of fellow writers and readers",
+      "Receive notifications about connection activities and messages",
+      "Create writing groups and collaborative projects",
     ],
   },
   {
-    title: "Profile Dashboard",
-    description:
-      "Track your creative journey with AI-powered analytics and insights",
-    icon: <Settings className="h-8 w-8 text-orange-500" />,
-    color: "orange",
+    title: "Character Confluence",
+    description: "Experience magical group interactions where multiple AI characters converse with each other",
+    icon: <Palette className="h-8 w-8 text-amber-500" />,
+    color: "amber",
     demo: (
-      <div className="h-full w-full bg-white/5 backdrop-blur-sm rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16 ring-2 ring-orange-500/20">
-              <AvatarImage src="/placeholder.jpg" />
-              <AvatarFallback>SL</AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="text-lg font-semibold">Creative Analytics</h3>
-              <p className="text-sm text-muted-foreground">
-                AI Writing Insights • Premium Member
-              </p>
-            </div>
+      <div className="h-full w-full bg-white/5 backdrop-blur-sm rounded-xl p-6 space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">Character Confluence</h3>
+            <p className="text-sm text-muted-foreground">
+              Multi-Character Interactions
+            </p>
           </div>
           <Button size="sm" variant="outline">
-            <Sparkles className="w-4 h-4 mr-2" />
-            AI Report
+            <Plus className="w-4 h-4 mr-2" />
+            New Session
           </Button>
         </div>
-        <div className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 p-4 rounded-lg bg-gradient-to-r from-orange-500/10 to-red-500/10">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-6 h-6 text-orange-500" />
-                <div>
-                  <p className="text-sm font-medium">Writing Analysis</p>
-                  <p className="text-2xl font-bold">Exceptional Progress</p>
+        <div className="space-y-4">
+          <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/10 to-pink-500/10">
+            <h4 className="font-medium mb-3">Active Confluence</h4>
+            <div className="flex gap-2 mb-3">
+              <Avatar className="h-10 w-10 border-2 border-amber-500/20">
+                <AvatarFallback>E</AvatarFallback>
+              </Avatar>
+              <Avatar className="h-10 w-10 border-2 border-pink-500/20">
+                <AvatarFallback>L</AvatarFallback>
+              </Avatar>
+              <Avatar className="h-10 w-10 border-2 border-blue-500/20">
+                <AvatarFallback>M</AvatarFallback>
+              </Avatar>
+              <Avatar className="h-10 w-10 border-2 border-green-500/20">
+                <AvatarFallback>You</AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>E</AvatarFallback>
+                </Avatar>
+                <div className="bg-white/10 rounded-lg p-2 text-sm max-w-[80%]">
+                  <p>I don&apos;t think we should enter the abandoned castle...</p>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <div className="bg-amber-500/20 rounded-lg p-2 text-sm max-w-[80%]">
+                  <p>But the treasure map clearly points to it!</p>
+                </div>
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>L</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>M</AvatarFallback>
+                </Avatar>
+                <div className="bg-white/10 rounded-lg p-2 text-sm max-w-[80%]">
+                  <p>I&apos;ve studied the history of this place. The legends say...</p>
                 </div>
               </div>
             </div>
-            <div className="p-4 rounded-lg bg-white/5">
-              <p className="text-sm font-medium">Writing Stats</p>
-              <p className="text-2xl font-bold">157,000</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Words this month • +15% vs last month
-              </p>
-            </div>
-            <div className="p-4 rounded-lg bg-white/5">
-              <p className="text-sm font-medium">AI Insights</p>
-              <p className="text-2xl font-bold">94%</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Story Coherence Score
-              </p>
-            </div>
           </div>
-          <div className="p-4 rounded-lg border border-white/10">
-            <h4 className="text-sm font-medium mb-3">AI Writing Assistant</h4>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span>Style consistency improved by 23%</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span>Character development is trending upward</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 rounded-full bg-violet-500" />
-                <span>3 new plot enhancement suggestions</span>
-              </div>
-            </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Join the conversation..."
+              className="flex-1"
+            />
+            <Button size="icon">
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
     ),
     features: [
-      "AI-powered writing analytics",
-      "Personal progress tracking",
-      "Style and consistency analysis",
-      "Character development insights",
-      "Plot strength evaluation",
-      "Customized improvement suggestions",
+      "Experience magical group interactions with multiple AI characters",
+      "Include your friends in character conversations",
+      "Create dynamic and unpredictable storytelling moments",
+      "Develop complex character relationships in a shared space",
+      "Watch how different characters interact with each other",
+      "Create unique story scenarios with multiple perspectives",
     ],
   },
 ];
@@ -547,11 +600,10 @@ export default function FeaturesPage() {
             className="text-center max-w-3xl mx-auto"
           >
             <h1 className="text-4xl sm:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 mb-6">
-              Powerful Features for Creative Writers
+              Craft Your Narrative Universe
             </h1>
             <p className="text-xl text-muted-foreground">
-              Discover the tools and features that will help you bring your
-              stories to life
+              Discover the magical tools that bring your stories to life through AI-powered creativity and community
             </p>
           </motion.div>
         </div>
@@ -673,20 +725,19 @@ export default function FeaturesPage() {
         className="container mx-auto px-4 py-24 text-center"
       >
         <div className="max-w-3xl mx-auto space-y-6">
-          <h2 className="text-3xl font-bold">Ready to Start Your Journey?</h2>
+          <h2 className="text-3xl font-bold">Begin Your Storytelling Adventure</h2>
           <p className="text-lg text-muted-foreground">
-            Join our community of creative writers and bring your stories to
-            life
+            Join our community of creators and breathe life into characters, worlds, and stories that captivate the imagination
           </p>
           <div className="flex gap-4 justify-center">
             <Button
               size="lg"
               className="bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600"
             >
-              Get Started
+              Start Creating
             </Button>
             <Button size="lg" variant="outline">
-              Learn More
+              Explore Stories
             </Button>
           </div>
         </div>

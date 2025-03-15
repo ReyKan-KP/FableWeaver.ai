@@ -6,7 +6,8 @@ import { FriendsList } from "./_components/friends-list";
 import { UserList } from "./_components/user-list";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, UserPlus, HelpCircle } from "lucide-react";
+import { Users, UserPlus, HelpCircle, Handshake } from "lucide-react";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
+import Loading from "./loading";
 const FriendsPage = () => {
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<{
@@ -28,6 +29,8 @@ const FriendsPage = () => {
     avatar_url: string;
     is_active: boolean;
   } | null>(null);
+  const { status } = useSession();
+  const isLoading = status === "loading";
 
   const handleOpenChat = (friend: {
     user_id: string;
@@ -43,24 +46,27 @@ const FriendsPage = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
+    isLoading ? (
+      <Loading />
+    ) : (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-6"
     >
       <div className="flex flex-col space-y-2">
         <div className="flex items-center gap-3">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+          
+            <div className="bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 p-2 rounded-lg">
+              <Handshake className="w-6 h-6 text-white" />
+            </div>
+            <div>
             <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">Tale Tethers</h1>
             <p className="text-muted-foreground">
               Connect with fellow storytellers and readers in your literary journey.
             </p>
-          </motion.div>
+            </div>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -222,7 +228,8 @@ const FriendsPage = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </motion.div>
+      </motion.div>
+    )
   );
 };
 

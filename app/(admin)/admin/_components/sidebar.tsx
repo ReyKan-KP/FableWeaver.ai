@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -16,12 +16,16 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Layers,
+  Search,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { slideIn, springTransition } from "./animation-variants";
+import { toast } from "sonner";
 
 const menuItems = [
   {
@@ -55,22 +59,40 @@ const menuItems = [
     color: "from-emerald-500 to-green-500",
   },
   {
+    title: "Thread Tapestry",
+    icon: Layers,
+    href: "/admin/thread-tapestry",
+    color: "from-green-500 to-yellow-500",
+  },
+  {
+    title: "Lore Lens",
+    icon: Search,
+    href: "/admin/lore-lens",
+    color: "from-yellow-500 to-orange-500",
+  },
+  {
+    title: "Tale Tethers",
+    icon: UserPlus,
+    href: "/admin/tale-tethers",
+    color: "from-orange-500 to-red-500",
+  },
+  {
     title: "Chapter Revisions",
     icon: FileText,
     href: "/admin/revisions",
-    color: "from-green-500 to-lime-500",
+    color: "from-red-500 to-pink-500",
   },
   {
     title: "AI Settings",
     icon: Sparkles,
     href: "/admin/ai-settings",
-    color: "from-lime-500 to-yellow-500",
+    color: "from-pink-500 to-purple-500",
   },
   {
     title: "System Settings",
     icon: Settings,
     href: "/admin/settings",
-    color: "from-yellow-500 to-orange-500",
+    color: "from-purple-500 to-indigo-500",
   },
 ];
 
@@ -79,10 +101,28 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleMenuItemClick = (title: string) => {
+    toast.info(`Navigating to ${title}`, {
+      duration: 2000,
+    });
+  };
+
+  const handleLogout = async () => {
+    toast.loading("Logging out...");
+    try {
+      await signOut({ redirect: false });
+      toast.success("Logged out successfully");
+      router.push("/sign-in");
+    } catch (error) {
+      toast.error("Failed to log out");
+    }
+  };
 
   if (!mounted) return null;
 
@@ -134,7 +174,11 @@ export default function Sidebar() {
           {menuItems.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <Link key={item.href} href={item.href}>
+              <Link 
+                key={item.href} 
+                href={item.href}
+                onClick={() => handleMenuItemClick(item.title)}
+              >
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -210,6 +254,7 @@ export default function Sidebar() {
                 variant="ghost"
                 size="icon"
                 className="shrink-0 hover:bg-red-500/10 hover:text-red-500"
+                onClick={handleLogout}
               >
                 <LogOut className="h-4 w-4" />
               </Button>

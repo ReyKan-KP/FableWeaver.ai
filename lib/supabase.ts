@@ -22,12 +22,12 @@ export const createServerSupabaseClient = () =>
     )
 
 // Helper function to update last_seen
-export const updateLastSeen = async (userId: string) => {
-    const supabase = createServerSupabaseClient()
+// export const updateLastSeen = async (userId: string) => {
+//     const supabase = createServerSupabaseClient()
 
-    await supabase
-        .from('user')
-        .update({ last_seen: new Date().toISOString() })
-        .eq('user_id', userId)
-}
+//     await supabase
+//         .from('user')
+//         .update({ last_seen: new Date().toISOString() })
+//         .eq('user_id', userId)
+// }
 

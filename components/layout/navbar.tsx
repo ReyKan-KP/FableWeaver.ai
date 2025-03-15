@@ -37,6 +37,7 @@ import {
   Handshake,
   Newspaper
 } from "lucide-react";
+import { CgFeed } from "react-icons/cg";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileMenu } from "./mobile-menu";
 import { title } from "process";
@@ -47,6 +48,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { NotificationPanel } from "./notification-panel";
 
 const navItems = [
   {
@@ -64,14 +66,16 @@ const navItems = [
   {
     title: "Thread Tapestry",
     href: "/thread-tapestry",
-    icon: Newspaper,
+    icon: CgFeed,
     description: "Thread Tapestry is socialhub for storytellers",
   },
-  // {
-  //   title: "Weave Anime",
-  //   href: "/weave-anime",
-  //   icon: Wand2,
-  // },
+  {
+    title: "Lore Lens",
+    href: "/lore-lens",
+    icon: Wand2,
+    description: "Lore Lens is a tool for getting recommendations for stories",
+  },
+
   {
     title: "Character Realm",
     href: "/character-realm",
@@ -85,7 +89,7 @@ const navItems = [
     description: "Explore character interactions and relationships",
   },
   {
-    title: "Fable Trail",
+    title: "Fable Sanctum",
     href: "/fable-trail",
     icon: BookOpen,
     description: "Discover and read published stories from our community",
@@ -126,6 +130,7 @@ const navItems = [
         icon: Wand2,
         description: "Get personalized story recommendations",
       },
+
     ],
   },
   {
@@ -206,7 +211,7 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center space-x-2 xl:space-x-8">
-          {navItems.slice(0, 7).map((item, index) => (
+          {navItems.slice(0, 8).map((item, index) => (
             <div
               key={item.title}
               className="relative"
@@ -511,7 +516,7 @@ export function Navbar() {
             </DropdownMenu>
           ) : (
             <div className="hidden lg:flex items-center pl-4 xl:pl-4 space-x-4 xl:space-x-8">
-              {navItems.slice(8, 10).map((item, index) => (
+              {navItems.slice(9, 11).map((item, index) => (
                 <div key={item.title} className="relative">
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -548,9 +553,11 @@ export function Navbar() {
               ))}
             </div>
           )}
-          <div className="hidden sm:block">
-            <ThemeToggle />
-          </div>
+          <div className="hidden sm:flex flex-row items-center space-x-4">
+  <ThemeToggle />
+  <NotificationPanel userId={session?.user?.id || ""} />
+</div>
+
 
           {/* Mobile Menu Button */}
           <button

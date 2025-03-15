@@ -13,6 +13,26 @@ const faqs = [
       "FableWeaver.ai is an innovative AI platform that lets you create, customize, and interact with anime and fictional characters. You can have one-on-one conversations or create group chats with multiple characters, bringing your favorite stories to life.",
   },
   {
+    question: "What is Thread Tapestry and how does it work?",
+    answer:
+      "Thread Tapestry is our interactive storytelling platform where writers can create branching narrative threads that readers can follow, comment on, and contribute to. It allows for community-driven storytelling with real-time feedback and collaboration.",
+  },
+  {
+    question: "How can Lore Lens help with my writing?",
+    answer:
+      "Lore Lens is an AI-powered research assistant that helps you explore and discover rich story worlds. It can help you research historical periods, mythology, or generate creative concepts to enhance your storytelling with accurate and inspiring information.",
+  },
+  {
+    question: "What makes Tale Tethers different from other social platforms?",
+    answer:
+      "Tale Tethers is specifically designed for writers to connect and collaborate. Unlike general social platforms, it focuses on creative partnerships, writing groups, and project collaboration with tools tailored for storytellers.",
+  },
+  {
+    question: "How does Fable Trail enhance the reading experience?",
+    answer:
+      "Fable Trail provides an immersive reading platform where you can discover new stories, track your reading progress, bookmark favorite chapters, and connect directly with authors. It offers personalized recommendations based on your reading preferences.",
+  },
+  {
     question: "How does Character Confluence work?",
     answer:
       "Character Confluence is our unique group chat feature that allows multiple AI characters to interact with each other and users simultaneously. You can create different scenarios, roleplay sessions, or just enjoy watching your favorite characters interact naturally.",

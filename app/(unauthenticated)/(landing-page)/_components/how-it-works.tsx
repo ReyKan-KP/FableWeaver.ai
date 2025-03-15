@@ -23,10 +23,10 @@ const HowItWorks = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent mb-4">
-              How It Works
+              Your Storytelling Journey
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Discover, create, and interact in your personalized fable
+              From imagination to immersion, follow the path to your own narrative universe
             </p>
           </motion.div>
 
@@ -34,29 +34,28 @@ const HowItWorks = () => {
             {[
               {
                 step: "01",
-                title: "Discover Stories",
+                title: "Explore the Fable Sanctum",
                 description:
-                  "Get personalized anime recommendations based on your preferences and watch history",
+                  "Discover a curated collection of stories and get personalized recommendations through the magical Lore Lens",
               },
               {
                 step: "02",
-                title: "Create Characters",
+                title: "Forge Your Characters",
                 description:
-                  "Design unique characters or choose from our collection to bring your favorite stories to life",
+                  "Breathe life into unique AI companions with rich personalities in the Character Realm that evolve with every interaction",
               },
               {
                 step: "03",
-                title: "Connect & Chat",
+                title: "Weave Your Narrative",
                 description:
-                  "Engage in immersive conversations and group chats while discovering new anime adventures",
+                  "Craft epic tales with AI assistance in Story Weaver, building immersive worlds chapter by chapter with intelligent story generation",
               },
               {
                 step: "04",
-                title: "Weave Your Tale",
+                title: "Connect & Collaborate",
                 description:
-                  "Craft immersive narratives with AI assistance, blending your creativity with intelligent story generation and chapter management",
+                  "Join the community through Thread Tapestry and Tale Tethers to share your creations and experience magical Character Confluence interactions",
               },
-
             ].map((step, index) => (
               <m.div
                 key={index}

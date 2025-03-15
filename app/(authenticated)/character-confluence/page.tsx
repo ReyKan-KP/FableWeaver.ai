@@ -16,6 +16,7 @@ import {
   Sparkles,
   HelpCircle,
   UserPlus,
+  MessageSquareQuote,UsersRound
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -283,10 +284,14 @@ export default function CharacterConfluence() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
-      >
+      > 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 p-2 rounded-lg">
+              <UsersRound className="w-6 h-6 text-white" />
+            </div>
             <div>
+
               <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
                 Character Confluence
               </h1>

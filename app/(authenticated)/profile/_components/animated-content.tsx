@@ -39,6 +39,11 @@ import {
   BookmarkIcon,
   MessageSquare,
   BarChart2,
+  ThumbsUp,
+  Eye,
+  UserPlus,
+  Send,
+  MessageCircle,
 } from "lucide-react";
 import { ProfileForm } from "./profile-form";
 import { formatDistanceToNow } from "date-fns";
@@ -83,6 +88,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { NotificationCount } from "./notification-count";
+import { NotificationPanel } from "../../../../components/layout/notification-panel";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -191,6 +198,97 @@ interface ReadingAnalytics {
   lastReadAt: string | null;
 }
 
+interface ThreadAnalytics {
+  totalThreads: number;
+  totalSavedThreads: number;
+  totalReactions: number;
+  totalThreadComments: number;
+  threadsByCategory: Array<{
+    category: string;
+    count: number;
+  }>;
+  threadActivity: Array<{
+    date: string;
+    count: number;
+    views: number;
+    likes: number;
+    comments: number;
+  }>;
+  commentActivity: Array<{
+    date: string;
+    count: number;
+    likes: number;
+    dislikes: number;
+  }>;
+  mostViewedThreads: Array<{
+    id: string;
+    title: string;
+    views: number;
+    category: string;
+  }>;
+  mostLikedThreads: Array<{
+    id: string;
+    title: string;
+    likes: number;
+    category: string;
+  }>;
+  mostCommentedThreads: Array<{
+    id: string;
+    title: string;
+    comments: number;
+    category: string;
+  }>;
+  recentThreads: Array<{
+    id: string;
+    title: string;
+    created_at: string;
+    category: string;
+  }>;
+}
+
+interface SocialAnalytics {
+  totalFriends: number;
+  pendingRequests: number;
+  sentRequests: number;
+  totalMessages: number;
+  sentMessages: number;
+  receivedMessages: number;
+  friendshipActivity: Array<{
+    date: string;
+    count: number;
+  }>;
+  messageActivity: Array<{
+    date: string;
+    sent: number;
+    received: number;
+  }>;
+  recentFriends: Array<{
+    id: string;
+    friend_id: string;
+    created_at: string;
+  }>;
+}
+
+interface ContentAnalytics {
+  totalInteractions: number;
+  interactionsByType: Array<{
+    type: string;
+    count: number;
+  }>;
+  ratingDistribution: Array<{
+    rating: number;
+    count: number;
+  }>;
+  averageRating: number;
+  recentInteractions: Array<{
+    id: string;
+    content_id: string;
+    type: string;
+    rating: number | null;
+    created_at: string;
+  }>;
+}
+
 interface AnimatedContentProps {
   user: {
     id: string;
@@ -205,6 +303,9 @@ interface AnimatedContentProps {
   preferences: UserPreferences;
   createdGroups: GroupChat[];
   joinedGroups: GroupChat[];
+  threadAnalytics: ThreadAnalytics;
+  socialAnalytics: SocialAnalytics;
+  contentAnalytics: ContentAnalytics;
 }
 
 const COLORS = [
@@ -545,6 +646,179 @@ function CommentActivityChart({
   );
 }
 
+function ThreadCategoryChart({ threadAnalytics }: { threadAnalytics: ThreadAnalytics }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <Pie
+          data={threadAnalytics.threadsByCategory}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+          outerRadius={80}
+          fill="#8884d8"
+          dataKey="count"
+          nameKey="category"
+        >
+          {threadAnalytics.threadsByCategory.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
+        <RechartsTooltip formatter={(value: number) => [`${value} threads`, 'Count']} />
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ThreadActivityChart({ threadAnalytics }: { threadAnalytics: ThreadAnalytics }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChartComponent
+        data={threadAnalytics.threadActivity}
+        margin={{
+          top: 20,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="date" />
+        <YAxis />
+        <RechartsTooltip />
+        <Legend />
+        <Bar dataKey="count" name="Threads" fill="#8884d8" />
+        <Bar dataKey="views" name="Views" fill="#82ca9d" />
+        <Bar dataKey="likes" name="Likes" fill="#ffc658" />
+        <Bar dataKey="comments" name="Comments" fill="#ff8042" />
+      </BarChartComponent>
+    </ResponsiveContainer>
+  );
+}
+
+function ThreadCommentActivityChart({ threadAnalytics }: { threadAnalytics: ThreadAnalytics }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart
+        data={threadAnalytics.commentActivity}
+        margin={{
+          top: 20,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="date" />
+        <YAxis />
+        <RechartsTooltip />
+        <Legend />
+        <Line type="monotone" dataKey="count" name="Comments" stroke="#8884d8" />
+        <Line type="monotone" dataKey="likes" name="Likes" stroke="#82ca9d" />
+        <Line type="monotone" dataKey="dislikes" name="Dislikes" stroke="#ff8042" />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+function FriendshipActivityChart({ socialAnalytics }: { socialAnalytics: SocialAnalytics }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <AreaChart
+        data={socialAnalytics.friendshipActivity}
+        margin={{
+          top: 20,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="date" />
+        <YAxis />
+        <RechartsTooltip />
+        <Legend />
+        <Area type="monotone" dataKey="count" name="New Friends" stroke="#8884d8" fill="#8884d8" />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+function MessageActivityChart({ socialAnalytics }: { socialAnalytics: SocialAnalytics }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChartComponent
+        data={socialAnalytics.messageActivity}
+        margin={{
+          top: 20,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="date" />
+        <YAxis />
+        <RechartsTooltip />
+        <Legend />
+        <Bar dataKey="sent" name="Sent Messages" fill="#8884d8" />
+        <Bar dataKey="received" name="Received Messages" fill="#82ca9d" />
+      </BarChartComponent>
+    </ResponsiveContainer>
+  );
+}
+
+function ContentInteractionChart({ contentAnalytics }: { contentAnalytics: ContentAnalytics }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <Pie
+          data={contentAnalytics.interactionsByType}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+          outerRadius={80}
+          fill="#8884d8"
+          dataKey="count"
+          nameKey="type"
+        >
+          {contentAnalytics.interactionsByType.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
+        <RechartsTooltip formatter={(value: number) => [`${value} interactions`, 'Count']} />
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+function RatingDistributionChart({ contentAnalytics }: { contentAnalytics: ContentAnalytics }) {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChartComponent
+        data={contentAnalytics.ratingDistribution}
+        margin={{
+          top: 20,
+          right: 30,
+          left: 20,
+          bottom: 5,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="rating" />
+        <YAxis />
+        <RechartsTooltip />
+        <Legend />
+        <Bar dataKey="count" name="Ratings" fill="#8884d8" />
+      </BarChartComponent>
+    </ResponsiveContainer>
+  );
+}
+
 export function AnimatedContent({
   user,
   statistics,
@@ -554,6 +828,9 @@ export function AnimatedContent({
   preferences,
   createdGroups,
   joinedGroups,
+  threadAnalytics,
+  socialAnalytics,
+  contentAnalytics,
 }: AnimatedContentProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const router = useRouter();
@@ -669,6 +946,7 @@ export function AnimatedContent({
               </Badge>
             </div>
           </div>
+          <NotificationCount userId={user.id} />
           <div className="flex gap-3">
             <Dialog>
               <DialogTrigger asChild>
@@ -784,42 +1062,36 @@ export function AnimatedContent({
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="w-full" value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="inline-flex h-10 items-center justify-center rounded-md p-1 text-muted-foreground mb-6 bg-primary/5">
-          <TabsTrigger
-            value="overview"
-            className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-blue-600 data-[state=active]:to-teal-500 data-[state=active]:text-white"
-          >
-            Overview
+        <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsTrigger value="overview">
+            <div className="flex items-center space-x-2">
+              <Activity className="h-4 w-4" />
+              <span>Overview</span>
+            </div>
           </TabsTrigger>
-          <TabsTrigger
-            value="statistics"
-            className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-blue-600 data-[state=active]:to-teal-500 data-[state=active]:text-white"
-          >
-            Statistics
+          <TabsTrigger value="writing">
+            <div className="flex items-center space-x-2">
+              <Type className="h-4 w-4" />
+              <span>Writing</span>
+            </div>
           </TabsTrigger>
-          <TabsTrigger
-            value="stories"
-            className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-blue-600 data-[state=active]:to-teal-500 data-[state=active]:text-white"
-          >
-            Stories
+          <TabsTrigger value="reading">
+            <div className="flex items-center space-x-2">
+              <BookOpen className="h-4 w-4" />
+              <span>Reading</span>
+            </div>
           </TabsTrigger>
-          <TabsTrigger
-            value="groups"
-            className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-blue-600 data-[state=active]:to-teal-500 data-[state=active]:text-white"
-          >
-            Groups
+          <TabsTrigger value="social">
+            <div className="flex items-center space-x-2">
+              <Users className="h-4 w-4" />
+              <span>Social</span>
+            </div>
           </TabsTrigger>
-          <TabsTrigger
-            value="activity"
-            className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-blue-600 data-[state=active]:to-teal-500 data-[state=active]:text-white"
-          >
-            Activity
-          </TabsTrigger>
-          <TabsTrigger
-            value="reading"
-            className="px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-600 data-[state=active]:via-blue-600 data-[state=active]:to-teal-500 data-[state=active]:text-white"
-          >
-            Reading
+          <TabsTrigger value="settings">
+            <div className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </div>
           </TabsTrigger>
         </TabsList>
 
@@ -913,7 +1185,7 @@ export function AnimatedContent({
           </div>
         </TabsContent>
 
-        <TabsContent value="statistics" className="space-y-6">
+        <TabsContent value="writing" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -1158,238 +1430,7 @@ export function AnimatedContent({
           </div>
         </TabsContent>
 
-        <TabsContent value="stories" className="space-y-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-2xl font-bold">Your Stories</h2>
-              <p className="text-muted-foreground">
-                Manage and track your story collection
-              </p>
-            </div>
-            <Button
-              onClick={() => router.push("/story-weaver")}
-              className="bg-primary text-white hover:bg-primary/90"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Story
-            </Button>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {recentStories.map((story) => (
-              <Card
-                key={story.id}
-                className="hover:shadow-lg transition-shadow"
-              >
-                <CardHeader className="pb-4">
-                  <div className="aspect-video relative rounded-md overflow-hidden mb-4">
-                    {story.coverImage ? (
-                      <Image
-                        src={story.coverImage}
-                        alt={story.title}
-                        className="w-full h-full object-contain"
-                        width={100}
-                        height={100}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-secondary/20 flex items-center justify-center">
-                        <BookOpen className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{story.title}</CardTitle>
-                      <CardDescription>
-                        {formatDistanceToNow(new Date(story.created_at), {
-                          addSuffix: true,
-                        })}
-                      </CardDescription>
-                    </div>
-                    <Badge
-                      variant={
-                        story.status === "published" ? "default" : "secondary"
-                      }
-                    >
-                      {story.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{story.genre}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="groups" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-primary" />
-                    <CardTitle>Created Groups</CardTitle>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push("/character-confluence")}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Group
-                  </Button>
-                </div>
-                <CardDescription>Groups you&apos;ve created</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {createdGroups.map((group) => (
-                    <div
-                      key={group.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/groups/${group.id}`)}
-                    >
-                      <div className="space-y-1">
-                        <p className="font-medium">{group.group_name}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Users className="w-4 h-4" />
-                          <span>{group.users_count} members</span>
-                          <span>•</span>
-                          <span>{group.characters_count} characters</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {group.is_active && (
-                          <Badge variant="default">Active</Badge>
-                        )}
-                        {group.is_auto_chatting && (
-                          <Badge variant="secondary">Auto-chat</Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {createdGroups.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>You haven&apos;t created any groups yet</p>
-                      <Button
-                        variant="link"
-                        onClick={() => router.push("/groups/create")}
-                        className="mt-2"
-                      >
-                        Create your first group
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  <CardTitle>Joined Groups</CardTitle>
-                </div>
-                <CardDescription>
-                  Groups you&apos;re participating in
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {joinedGroups.map((group) => (
-                    <div
-                      key={group.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => router.push(`/groups/${group.id}`)}
-                    >
-                      <div className="space-y-1">
-                        <p className="font-medium">{group.group_name}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Users className="w-4 h-4" />
-                          <span>{group.users_count} members</span>
-                          <span>•</span>
-                          <span>
-                            Last active{" "}
-                            {formatDistanceToNow(
-                              new Date(group.last_message_at),
-                              {
-                                addSuffix: true,
-                              }
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {group.is_active && (
-                          <Badge variant="default">Active</Badge>
-                        )}
-                        {group.is_auto_chatting && (
-                          <Badge variant="secondary">Auto-chat</Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {joinedGroups.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>You haven&apos;t joined any groups yet</p>
-                      <Button
-                        variant="link"
-                        onClick={() => router.push("/groups/explore")}
-                        className="mt-2"
-                      >
-                        Explore groups
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="activity" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-5 h-5 text-primary" />
-                  <CardTitle>Activity Timeline</CardTitle>
-                </div>
-                <Badge variant="outline">Recent</Badge>
-              </div>
-              <CardDescription>Track your writing journey</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative space-y-6 pl-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[2px] before:bg-border">
-                {recentActivity.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="relative pl-6 before:absolute before:left-[-5px] before:top-2 before:w-3 before:h-3 before:bg-background before:border-2 before:border-primary before:rounded-full"
-                  >
-                    <div className="flex flex-col space-y-1.5">
-                      <p className="text-sm font-medium leading-none">
-                        {activity.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(activity.created_at), {
-                          addSuffix: true,
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reading" className="space-y-4">
+        <TabsContent value="reading" className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
               icon={<BookOpen className="h-4 w-4" />}
@@ -1460,6 +1501,279 @@ export function AnimatedContent({
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="social" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Thread Activity</CardTitle>
+                <CardDescription>
+                  Your activity in Thread Tapestry
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <StatsCard
+                    icon={<MessageSquare className="h-4 w-4 text-primary" />}
+                    label="Total Threads"
+                    value={threadAnalytics.totalThreads}
+                  />
+                  <StatsCard
+                    icon={<BookmarkIcon className="h-4 w-4 text-primary" />}
+                    label="Saved Threads"
+                    value={threadAnalytics.totalSavedThreads}
+                  />
+                  <StatsCard
+                    icon={<ThumbsUp className="h-4 w-4 text-primary" />}
+                    label="Reactions"
+                    value={threadAnalytics.totalReactions}
+                  />
+                  <StatsCard
+                    icon={<MessageCircle className="h-4 w-4 text-primary" />}
+                    label="Comments"
+                    value={threadAnalytics.totalThreadComments}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Thread Categories</CardTitle>
+                <CardDescription>
+                  Distribution of your threads by category
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ThreadCategoryChart threadAnalytics={threadAnalytics} />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Thread Activity Over Time</CardTitle>
+                <CardDescription>
+                  Your thread creation and engagement metrics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ThreadActivityChart threadAnalytics={threadAnalytics} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Comment Activity</CardTitle>
+                <CardDescription>
+                  Your commenting activity on threads
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ThreadCommentActivityChart threadAnalytics={threadAnalytics} />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Most Viewed Threads</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {threadAnalytics.mostViewedThreads.map((thread) => (
+                    <div key={thread.id} className="flex justify-between items-center">
+                      <div className="flex-1 truncate">
+                        <span className="font-medium">{thread.title}</span>
+                        <Badge variant="outline" className="ml-2">
+                          {thread.category}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center space-x-1 text-muted-foreground">
+                        <Eye className="h-4 w-4" />
+                        <span>{thread.views}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Most Liked Threads</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {threadAnalytics.mostLikedThreads.map((thread) => (
+                    <div key={thread.id} className="flex justify-between items-center">
+                      <div className="flex-1 truncate">
+                        <span className="font-medium">{thread.title}</span>
+                        <Badge variant="outline" className="ml-2">
+                          {thread.category}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center space-x-1 text-muted-foreground">
+                        <ThumbsUp className="h-4 w-4" />
+                        <span>{thread.likes}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Friendship Stats</CardTitle>
+                <CardDescription>
+                  Your connections in Tale Tethers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <StatsCard
+                    icon={<Users className="h-4 w-4 text-primary" />}
+                    label="Total Friends"
+                    value={socialAnalytics.totalFriends}
+                  />
+                  <StatsCard
+                    icon={<UserPlus className="h-4 w-4 text-primary" />}
+                    label="Pending Requests"
+                    value={socialAnalytics.pendingRequests}
+                  />
+                  <StatsCard
+                    icon={<MessageSquare className="h-4 w-4 text-primary" />}
+                    label="Total Messages"
+                    value={socialAnalytics.totalMessages}
+                  />
+                  <StatsCard
+                    icon={<Send className="h-4 w-4 text-primary" />}
+                    label="Sent Messages"
+                    value={socialAnalytics.sentMessages}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Friendship Growth</CardTitle>
+                <CardDescription>
+                  Your friendship connections over time
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FriendshipActivityChart socialAnalytics={socialAnalytics} />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Message Activity</CardTitle>
+                <CardDescription>
+                  Your messaging activity with friends
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MessageActivityChart socialAnalytics={socialAnalytics} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Content Interactions</CardTitle>
+                <CardDescription>
+                  Your interactions with content in Lore Lens
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <StatsCard
+                    icon={<Activity className="h-4 w-4 text-primary" />}
+                    label="Total Interactions"
+                    value={contentAnalytics.totalInteractions}
+                  />
+                  <StatsCard
+                    icon={<Star className="h-4 w-4 text-primary" />}
+                    label="Average Rating"
+                    value={contentAnalytics.averageRating.toFixed(1)}
+                  />
+                </div>
+                <div className="mt-4">
+                  <ContentInteractionChart contentAnalytics={contentAnalytics} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Rating Distribution</CardTitle>
+                <CardDescription>
+                  Distribution of your content ratings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RatingDistributionChart contentAnalytics={contentAnalytics} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-medium">Recent Interactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {contentAnalytics.recentInteractions.map((interaction) => (
+                    <div key={interaction.id} className="flex justify-between items-center">
+                      <div className="flex-1">
+                        <span className="font-medium">{interaction.type}</span>
+                        <div className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(new Date(interaction.created_at), {
+                            addSuffix: true,
+                          })}
+                        </div>
+                      </div>
+                      {interaction.rating && (
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-4 w-4 text-yellow-500" />
+                          <span>{interaction.rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" />
+                  <CardTitle>Settings</CardTitle>
+                </div>
+                <Button variant="ghost" size="sm">
+                  Edit
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Settings content */}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </motion.div>

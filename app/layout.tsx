@@ -39,7 +39,7 @@ export default async function RootLayout({
               disableTransitionOnChange
           >
             <Navbar />
-            <LastSeenUpdater />
+            {/* <LastSeenUpdater /> */}
             <AnimatedGradient />
             <main className="pt-28">
               <Toaster />

@@ -42,6 +42,7 @@
     "@supabase/supabase-js": "^2.48.1",
     "@tabler/icons-react": "^3.28.1",
     "@tailwindcss/line-clamp": "^0.4.4",
+    "@tanstack/react-table": "^8.21.2",
     "@types/node": "22.5.5",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "18.3.8",
@@ -49,13 +50,14 @@
     "@vercel/analytics": "^1.4.1",
     "ai": "^4.1.0",
     "autoprefixer": "10.4.20",
-    "axios": "^1.7.9",
+    "axios": "^1.8.3",
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.0.0",
     "concurrently": "^9.0.1",
     "date-fns": "^4.1.0",
     "dicons": "^1.1.7",
+    "dotenv": "^16.4.7",
     "eslint": "8.41.0",
     "eslint-config-next": "13.4.4",
     "fableweaver.ai": "file:",
@@ -84,12 +86,13 @@
     "tailwindcss": "3.4.12",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.6.2",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "vercel": "^41.1.4",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@shadcn/ui": "^0.0.4",
-    "@types/pdfkit": "^0.13.9"
+    "@types/pdfkit": "^0.13.9",
+    "@types/uuid": "^10.0.0"
   }
 }

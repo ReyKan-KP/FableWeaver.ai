@@ -35,6 +35,7 @@ import BookmarkButton from "../_components/bookmark-button";
 import ReadingProgress from "../_components/reading-progress";
 import CommentsSection from "../_components/comments-section";
 import { toast } from "sonner";
+import Loading from "./loading";  
 
 interface Chapter {
   id: string;
@@ -145,12 +146,7 @@ export default function NovelDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading novel...</p>
-        </div>
-      </div>
+      <Loading />
     );
   }
 

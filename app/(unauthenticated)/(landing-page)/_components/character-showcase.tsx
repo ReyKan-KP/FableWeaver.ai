@@ -46,8 +46,7 @@ export default function CharacterShowcase() {
           .from("character_profiles")
           .select("*")
           .eq("is_public", true)
-          .order("created_at", { ascending: false })
-          .limit(3);
+          .eq("featured", true);
 
         if (error) throw error;
 

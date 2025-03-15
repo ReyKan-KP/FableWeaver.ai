@@ -22,6 +22,8 @@ import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { CgFeed } from "react-icons/cg";
+import Loading from "./loading";
 
 export default function ThreadTapestryPage() {
   const [showCreateThread, setShowCreateThread] = useState(false);
@@ -30,6 +32,7 @@ export default function ThreadTapestryPage() {
   const [isHelpDialogOpen, setIsHelpDialogOpen] = useState(false);
   const [isLoginPromptOpen, setIsLoginPromptOpen] = useState(false);
   const { data: session, status } = useSession();
+  const isLoading = status === "loading";
   const userId = session?.user?.id;
   const isAuthenticated = status === "authenticated";
   const router = useRouter();
@@ -56,6 +59,9 @@ export default function ThreadTapestryPage() {
   };
 
   return (
+    isLoading ? (
+      <Loading />
+    ) : (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -67,7 +73,7 @@ export default function ThreadTapestryPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
               <div className="bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 p-2 rounded-lg">
-                <Layers className="w-6 h-6 text-white" />
+                <CgFeed className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
@@ -313,5 +319,6 @@ export default function ThreadTapestryPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
   );
 } 

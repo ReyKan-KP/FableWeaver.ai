@@ -67,7 +67,7 @@ import {
   Area,
 } from "recharts";
 import { toast } from "sonner";
-
+import Loading from "@/app/(admin)/admin/characters/loading";
 interface Character {
   id: string;
   name: string;
@@ -225,14 +225,7 @@ const CharacterAnalyticsDialog = ({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-96">
-            <div className="flex flex-col items-center gap-4">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-              <p className="text-sm text-muted-foreground">
-                Loading analytics...
-              </p>
-            </div>
-          </div>
+          <Loading />
         ) : (
           <div className="space-y-8 py-4">
             {/* Key Metrics */}

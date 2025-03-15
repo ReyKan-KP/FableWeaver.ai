@@ -12,6 +12,7 @@ import Comments from "../_components/comments"
 import type { Thread } from "@/types/threads"
 import { toast } from "sonner"
 import { createBrowserSupabaseClient } from "@/lib/supabase"
+import Loading from "./loading";
 
 export default function ThreadPage({ params }: { params: { slug: string } }) {
   const { data: session, status } = useSession()
@@ -234,10 +235,7 @@ export default function ThreadPage({ params }: { params: { slug: string } }) {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-12 h-12 animate-spin text-blue-500 mb-4" />
-        <p className="text-lg text-gray-600 dark:text-gray-300">Loading thread...</p>
-      </div>
+      <Loading />
     )
   }
 

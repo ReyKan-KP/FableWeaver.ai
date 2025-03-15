@@ -388,7 +388,7 @@ export function UserProfile({
               <h1 className="text-3xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
                 {user.user_name}
               </h1>
-              {user.is_active ? (
+              {/* {user.is_active ? (
                 <Badge variant="default" className="flex items-center gap-1 bg-green-500 hover:bg-green-600">
                   <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                   Online
@@ -398,7 +398,7 @@ export function UserProfile({
                   <Clock className="w-3 h-3" />
                   Offline
                 </Badge>
-              )}
+              )} */}
             </div>
             <div className="flex items-center gap-4 mt-2 text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-1">

@@ -15,6 +15,7 @@ import {
   Trash2,
   Info,
   HelpCircle,
+  MessageSquareQuote
 } from "lucide-react";
 import Image from "next/image";
 import type { Message, Character } from "@/types/chat";
@@ -166,6 +167,9 @@ export default function CharactersPage() {
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 p-2 rounded-lg">
+              <MessageSquareQuote className="w-6 h-6 text-white" />
+            </div>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
                 Character Realm

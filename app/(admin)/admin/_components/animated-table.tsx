@@ -8,13 +8,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { containerVariants, fadeIn, springTransition } from "./animation-variants";
+import { toast } from "sonner";
 
 interface AnimatedTableProps {
   headers: string[];
   children: React.ReactNode;
+  title?: string;
 }
 
-export function AnimatedTable({ headers, children }: AnimatedTableProps) {
+export function AnimatedTable({ headers, children, title }: AnimatedTableProps) {
   return (
     <motion.div
       variants={containerVariants}
@@ -50,17 +52,31 @@ export function AnimatedTable({ headers, children }: AnimatedTableProps) {
 export function AnimatedTableRow({
   children,
   onClick,
+  data,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
+  data?: Record<string, any>;
 }) {
+  const handleRowClick = () => {
+    if (onClick) {
+      onClick();
+    } else if (data) {
+      // Show a toast with the first value from the data object
+      const firstValue = Object.values(data)[0];
+      toast.info("Row selected", {
+        description: typeof firstValue === 'string' ? firstValue : "View details",
+      });
+    }
+  };
+  
   return (
     <motion.tr
       variants={fadeIn}
       whileHover={{ scale: 1.01, backgroundColor: "rgba(0,0,0,0.02)" }}
       whileTap={{ scale: 0.99 }}
       transition={springTransition}
-      onClick={onClick}
+      onClick={handleRowClick}
       className="cursor-pointer"
     >
       {children}
