@@ -15,6 +15,7 @@ import {
   Search,
   Sparkles,
   HelpCircle,
+  UserPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -345,11 +346,10 @@ export default function CharacterConfluence() {
                           }}
                         >
                           <div
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                              selectedCharacters.includes(character.id)
+                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedCharacters.includes(character.id)
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-background"
-                            }`}
+                              }`}
                           >
                             {selectedCharacters.includes(character.id) && (
                               <Check className="w-4 h-4" />
@@ -387,11 +387,10 @@ export default function CharacterConfluence() {
                           }}
                         >
                           <div
-                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                              selectedUsers.includes(user.id)
+                            className={`w-5 h-5 rounded-full border flex items-center justify-center ${selectedUsers.includes(user.id)
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-background"
-                            }`}
+                              }`}
                           >
                             {selectedUsers.includes(user.id) && (
                               <Check className="w-4 h-4" />
@@ -476,13 +475,28 @@ export default function CharacterConfluence() {
           </motion.div>
         </div>
       </motion.div>
-
+      {/* Add Friends Card */}
+      <Link href="/tale-tethers" className="block w-full max-w-md mx-auto py-4 my-4">
+        <Card className="p-6 hover:shadow-lg transition-all cursor-pointer border-dashed border-2 hover:border-blue-500 hover:scale-105 flex flex-col items-center justify-center gap-3">
+          <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
+            <UserPlus className="w-8 h-8 text-blue-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Connect with More Friends</h3>
+          <p className="text-center text-gray-600 dark:text-gray-400">
+            Discover and connect with more friends to add to your friends and character group chats.
+          </p>
+          <Button variant="outline" className="mt-2 border-blue-500 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30">
+            Find Friends
+          </Button>
+        </Card>
+      </Link>
       <motion.div
         variants={container}
         initial="hidden"
         animate="show"
         className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
       >
+
         {filteredGroups.map((group) => (
           <motion.div
             key={group.id}
@@ -522,9 +536,9 @@ export default function CharacterConfluence() {
                           src={
                             item.type === "character"
                               ? characterImages[item.id] ||
-                                "/images/default-character.png"
+                              "/images/default-character.png"
                               : userImages[item.id] ||
-                                "/images/default-avatar.png"
+                              "/images/default-avatar.png"
                           }
                           alt={item.name}
                           width={32}
@@ -541,15 +555,15 @@ export default function CharacterConfluence() {
                     {(group.character_names?.length || 0) +
                       (group.user_names?.length || 0) >
                       4 && (
-                      <div className="w-8 h-8 rounded-full border-2 border-[#0F0F0F] bg-gray-800 flex items-center justify-center">
-                        <span className="text-xs font-medium text-gray-400">
-                          +
-                          {(group.character_names?.length || 0) +
-                            (group.user_names?.length || 0) -
-                            4}
-                        </span>
-                      </div>
-                    )}
+                        <div className="w-8 h-8 rounded-full border-2 border-[#0F0F0F] bg-gray-800 flex items-center justify-center">
+                          <span className="text-xs font-medium text-gray-400">
+                            +
+                            {(group.character_names?.length || 0) +
+                              (group.user_names?.length || 0) -
+                              4}
+                          </span>
+                        </div>
+                      )}
                   </div>
 
                   {/* Group Name and Info */}

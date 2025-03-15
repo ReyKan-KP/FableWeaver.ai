@@ -19,17 +19,17 @@ import {
   Info,
   User as UserIcon
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { threadService } from '@/lib/services/threads';
 import { useRouter } from 'next/navigation';
+import AIFeatures from "./ai-features";
 
 
 export default function CreateThread() {
   const { data: session, status } = useSession();
   const user = session?.user;
-  const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState("");
@@ -52,8 +52,21 @@ export default function CreateThread() {
   ];
 
   const handleAddTag = () => {
-    if (newTag && !tags.includes(newTag)) {
-      setTags([...tags, newTag]);
+    const trimmedTag = newTag.trim().toLowerCase();
+    if (trimmedTag && !tags.includes(trimmedTag)) {
+      if (tags.length >= 5) {
+        toast.error("Maximum tags reached", {
+          description: "You can only add up to 5 tags per thread."
+        });
+        return;
+      }
+      if (trimmedTag.length > 20) {
+        toast.error("Tag too long", {
+          description: "Tags must be 20 characters or less."
+        });
+        return;
+      }
+      setTags([...tags, trimmedTag]);
       setNewTag("");
     }
   };
@@ -73,20 +86,16 @@ export default function CreateThread() {
       const file = files[i];
       if (file.type.startsWith('image/')) {
         if (file.size > 5 * 1024 * 1024) { // 5MB limit
-          toast({
-            title: "File too large",
-            description: "Please upload images smaller than 5MB.",
-            variant: "destructive",
+          toast.error("File too large", {
+            description: "Please upload images smaller than 5MB."
           });
           continue;
         }
         newImages.push(file);
         newPreviews.push(URL.createObjectURL(file));
       } else {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload only image files.",
-          variant: "destructive",
+        toast.error("Invalid file type", {
+          description: "Please upload only image files."
         });
       }
     }
@@ -101,22 +110,22 @@ export default function CreateThread() {
     setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
+  const handleEnhancedContent = (enhancedContent: string) => {
+    setContent(enhancedContent);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content || !category) {
-      toast({
-        title: "Missing required fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
+      toast.error("Missing required fields", {
+        description: "Please fill in all required fields."
       });
       return;
     }
 
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to create a thread.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to create a thread."
       });
       return;
     }
@@ -135,20 +144,21 @@ export default function CreateThread() {
         imageUrls.push(url);
       }
 
-      // Create thread
-      await threadService.createThread({
+      // Create thread with properly formatted tags
+      const threadData = {
         user_id: user.id,
         title,
         content,
         category,
-        tags,
+        tags: tags.length > 0 ? tags.map(tag => tag.trim().toLowerCase()) : [],
         images: imageUrls,
         status: 'active'
-      });
+      } as const;
 
-      toast({
-        title: "Thread created successfully",
-        description: "Your thread has been published.",
+      await threadService.createThread(threadData);
+
+      toast.success("Thread created successfully", {
+        description: "Your thread has been published."
       });
 
       // Reset form
@@ -164,10 +174,8 @@ export default function CreateThread() {
       router.push('/thread-tapestry');
     } catch (error) {
       console.error('Error creating thread:', error);
-      toast({
-        title: "Error creating thread",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error creating thread", {
+        description: "Something went wrong. Please try again."
       });
     } finally {
       setIsSubmitting(false);
@@ -235,6 +243,7 @@ export default function CreateThread() {
               className="min-h-[200px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
               required
             />
+            {content && <AIFeatures content={content} onEnhancedContent={handleEnhancedContent} />}
           </div>
 
           {/* Category Selection */}

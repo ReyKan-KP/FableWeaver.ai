@@ -19,7 +19,7 @@ import {
   Trash2,
   User as UserIcon
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { threadService } from '@/lib/services/threads';
 import type { Comment } from '@/types/threads';
 import { createBrowserSupabaseClient } from '@/lib/supabase';
@@ -36,6 +36,12 @@ import {
 import { UserAvatar } from "@/components/user-avatar";
 import Link from "next/link";
 import { format } from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface CommentsProps {
   threadId: string;
@@ -45,7 +51,6 @@ export default function Comments({ threadId }: CommentsProps) {
   const { data: session, status } = useSession();
   const user = session?.user;
   const supabase = createBrowserSupabaseClient();
-  const { toast } = useToast();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -55,6 +60,7 @@ export default function Comments({ threadId }: CommentsProps) {
   const [userReactions, setUserReactions] = useState<Record<string, 'like' | 'dislike' | null>>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const isAuthenticated = status === "authenticated";
 
   useEffect(() => {
     fetchComments();
@@ -108,10 +114,8 @@ export default function Comments({ threadId }: CommentsProps) {
       setComments(data);
     } catch (error) {
       console.error('Error fetching comments:', error);
-      toast({
-        title: "Error loading comments",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error loading comments", {
+        description: "Something went wrong. Please try again."
       });
     } finally {
       setLoading(false);
@@ -123,10 +127,8 @@ export default function Comments({ threadId }: CommentsProps) {
     if (!newComment.trim()) return;
 
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to comment.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to comment."
       });
       return;
     }
@@ -143,10 +145,8 @@ export default function Comments({ threadId }: CommentsProps) {
       fetchComments();
     } catch (error) {
       console.error('Error creating comment:', error);
-      toast({
-        title: "Error creating comment",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error creating comment", {
+        description: "Something went wrong. Please try again."
       });
     } finally {
       setIsSubmitting(false);
@@ -158,10 +158,8 @@ export default function Comments({ threadId }: CommentsProps) {
     if (!replyContent.trim() || !replyTo) return;
 
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to reply.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to reply."
       });
       return;
     }
@@ -180,10 +178,8 @@ export default function Comments({ threadId }: CommentsProps) {
       fetchComments();
     } catch (error) {
       console.error('Error creating reply:', error);
-      toast({
-        title: "Error creating reply",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error creating reply", {
+        description: "Something went wrong. Please try again."
       });
     } finally {
       setIsSubmitting(false);
@@ -192,10 +188,8 @@ export default function Comments({ threadId }: CommentsProps) {
 
   const handleReaction = async (commentId: string, type: 'like' | 'dislike') => {
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to react to comments.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to react to comments."
       });
       return;
     }
@@ -267,20 +261,16 @@ export default function Comments({ threadId }: CommentsProps) {
       fetchComments();
     } catch (error) {
       console.error('Error handling reaction:', error);
-      toast({
-        title: "Error with reaction",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error with reaction", {
+        description: "Something went wrong. Please try again."
       });
     }
   };
 
   const handleReport = async (commentId: string) => {
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to report comments.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to report comments."
       });
       return;
     }
@@ -292,45 +282,37 @@ export default function Comments({ threadId }: CommentsProps) {
         target_id: commentId,
         reason: 'Inappropriate content'
       });
-      toast({
-        title: "Comment reported",
-        description: "Thank you for helping us maintain a safe community.",
+      toast.success("Comment reported", {
+        description: "Thank you for helping us maintain a safe community."
       });
     } catch (error) {
       console.error('Error reporting comment:', error);
-      toast({
-        title: "Error reporting comment",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error reporting comment", {
+        description: "Something went wrong. Please try again."
       });
     }
   };
 
   const handleDeleteComment = async (commentId: string) => {
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to delete comments.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to delete comments."
       });
       return;
     }
 
     try {
       await threadService.deleteComment(commentId);
-      toast({
-        title: "Comment deleted",
-        description: "Your comment has been deleted.",
+      toast.success("Comment deleted", {
+        description: "Your comment has been deleted."
       });
       fetchComments();
       setDeleteDialogOpen(false);
       setCommentToDelete(null);
     } catch (error) {
       console.error('Error deleting comment:', error);
-      toast({
-        title: "Error deleting comment",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error deleting comment", {
+        description: "Something went wrong. Please try again."
       });
     }
   };
@@ -366,15 +348,35 @@ export default function Comments({ threadId }: CommentsProps) {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleReport(comment.id)}
-                  className="hover:scale-110 transition-transform"
-                >
-                  <Flag className="w-4 h-4" />
-                </Button>
-                {isCommentOwner && (
+                {isAuthenticated ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleReport(comment.id)}
+                    className="hover:scale-110 transition-transform"
+                  >
+                    <Flag className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="hover:scale-110 transition-transform"
+                          disabled
+                        >
+                          <Flag className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Sign in to report this comment</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {isAuthenticated && isCommentOwner && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -391,41 +393,100 @@ export default function Comments({ threadId }: CommentsProps) {
             </div>
             <p className="mt-2 text-gray-700 dark:text-gray-300">{comment.content}</p>
             <div className="flex items-center gap-4 mt-2">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`flex items-center gap-2 hover:scale-105 transition-transform ${
-                  userReactions[comment.id] === 'like'
-                    ? 'text-blue-500'
-                    : 'text-gray-500 hover:text-blue-500'
-                } ${userReactions[comment.id] === 'dislike' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                onClick={() => handleReaction(comment.id, 'like')}
-              >
-                <ThumbsUp className="w-4 h-4" />
-                {comment.likes_count}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`flex items-center gap-2 hover:scale-105 transition-transform ${
-                  userReactions[comment.id] === 'dislike'
-                    ? 'text-red-500'
-                    : 'text-gray-500 hover:text-red-500'
-                } ${userReactions[comment.id] === 'like' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                onClick={() => handleReaction(comment.id, 'dislike')}
-              >
-                <ThumbsDown className="w-4 h-4" />
-                {comment.dislikes_count}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="flex items-center gap-2 hover:scale-105 transition-transform"
-                onClick={() => setReplyTo(comment.id)}
-              >
-                <MessageCircle className="w-4 h-4" />
-                Reply
-              </motion.button>
+              {isAuthenticated ? (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className={`flex items-center gap-2 hover:scale-105 transition-transform ${
+                    userReactions[comment.id] === 'like'
+                      ? 'text-blue-500'
+                      : 'text-gray-500 hover:text-blue-500'
+                  } ${userReactions[comment.id] === 'dislike' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => handleReaction(comment.id, 'like')}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  {comment.likes_count}
+                </motion.button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        className="flex items-center gap-2 text-gray-500"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                        {comment.likes_count}
+                      </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Sign in to like this comment</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              
+              {isAuthenticated ? (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className={`flex items-center gap-2 hover:scale-105 transition-transform ${
+                    userReactions[comment.id] === 'dislike'
+                      ? 'text-red-500'
+                      : 'text-gray-500 hover:text-red-500'
+                  } ${userReactions[comment.id] === 'like' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => handleReaction(comment.id, 'dislike')}
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  {comment.dislikes_count}
+                </motion.button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        className="flex items-center gap-2 text-gray-500"
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                        {comment.dislikes_count}
+                      </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Sign in to dislike this comment</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              
+              {isAuthenticated ? (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="flex items-center gap-2 hover:scale-105 transition-transform"
+                  onClick={() => setReplyTo(comment.id)}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Reply
+                </motion.button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        className="flex items-center gap-2 text-gray-500"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Reply
+                      </motion.button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Sign in to reply to this comment</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           </div>
         </div>
@@ -488,44 +549,77 @@ export default function Comments({ threadId }: CommentsProps) {
   return (
     <div className="space-y-6">
       {/* New Comment Form */}
-      <form onSubmit={handleSubmitComment} className="space-y-4">
-        <Textarea
-          placeholder="Write a comment..."
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          className="min-h-[100px] glass"
-        />
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            disabled={isSubmitting || !newComment.trim()}
-            className="hover:scale-105 transition-transform"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Commenting...
-              </>
-            ) : (
-              "Comment"
-            )}
-          </Button>
-        </div>
-      </form>
+      {isAuthenticated ? (
+        <form onSubmit={handleSubmitComment} className="space-y-4">
+          <Textarea
+            placeholder="Write a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            className="min-h-[100px] glass"
+          />
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isSubmitting || !newComment.trim()}
+              className="hover:scale-105 transition-transform"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Commenting...
+                </>
+              ) : (
+                "Comment"
+              )}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Write a comment..."
+                  disabled
+                  className="min-h-[100px] glass cursor-not-allowed opacity-70"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    disabled
+                    className="opacity-70 cursor-not-allowed"
+                  >
+                    Comment
+                  </Button>
+                </div>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Sign in to comment on this thread</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
 
       {/* Comments List */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
+      ) : comments.filter(comment => !comment.parent_id).length === 0 ? (
+        <div className="flex justify-center items-center h-64 text-gray-500">
+          No comments yet. Be the first to comment!
+        </div>
       ) : (
-        <ScrollArea className="max-h-[200px] pr-4 h-full">
-          <div className="space-y-6">
-            {comments
-              .filter(comment => !comment.parent_id)
-              .map(comment => renderComment(comment))}
-          </div>
-        </ScrollArea>
+        <div className=" border border-gray-200 dark:border-gray-800 rounded-md">
+          <ScrollArea className="max-h-[300px] overflow-y-auto w-full">
+            <div className="space-y-6 p-4">
+              {comments
+                .filter(comment => !comment.parent_id)
+                .map(comment => renderComment(comment))}
+            </div>
+          </ScrollArea>
+        </div>
       )}
 
       {/* Delete Confirmation Dialog */}

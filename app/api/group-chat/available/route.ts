@@ -15,6 +15,14 @@ interface UserProfile {
     avatar_url?: string
 }
 
+interface FriendshipData {
+    id: string;
+    user_id: string;
+    friend_id: string;
+    user: UserProfile & { is_active: boolean };
+    friend: UserProfile & { is_active: boolean };
+}
+
 export const dynamic = "force-dynamic" // This opts out of static generation
 export const maxDuration = 60;
 
@@ -40,18 +48,47 @@ export async function GET(req: NextRequest) {
             return new NextResponse("Error fetching characters", { status: 500 })
         }
 
-        // Get all active users except the current user
-        const { data: users, error: userError } = await supabase
-            .from("user")
-            .select("user_id, user_name, avatar_url")
-            .neq("user_id", session.user.id)
-            .eq("is_active", true)
-            .order("user_name")
+        // Get all active users who are friends with the current user
+        const { data: friendships, error: friendshipError } = await supabase
+            .from("friendships")
+            .select(`
+                id,
+                user_id,
+                friend_id,
+                user:user!friendships_user_id_fkey (
+                    user_id,
+                    user_name,
+                    avatar_url,
+                    is_active
+                ),
+                friend:user!friendships_friend_id_fkey (
+                    user_id,
+                    user_name,
+                    avatar_url,
+                    is_active
+                )
+            `)
+            .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`)
+            .eq("status", "accepted") as { data: FriendshipData[] | null, error: any };
 
-        if (userError) {
-            console.error("Error fetching users:", userError)
-            return new NextResponse("Error fetching users", { status: 500 })
+        if (friendshipError) {
+            console.error("Error fetching friendships:", friendshipError);
+            return new NextResponse("Error fetching friends", { status: 500 });
         }
+
+        // Process friendships to get friend data
+        const friends = (friendships || []).map((friendship) => {
+            const friend = friendship.user_id === session.user.id
+                ? friendship.friend
+                : friendship.user;
+            
+            return {
+                id: friend.user_id,
+                name: friend.user_name,
+                image: friend.avatar_url,
+                is_active: friend.is_active
+            };
+        }).filter(friend => friend.is_active);
 
         return NextResponse.json({
             characters: (characters || []).map((char: { id: any; name: any; image_url: any }) => ({
@@ -59,11 +96,7 @@ export async function GET(req: NextRequest) {
                 name: char.name,
                 image: char.image_url,
             })),
-            users: (users || []).map((user: { user_id: any; user_name: any; avatar_url: any }) => ({
-                id: user.user_id,
-                name: user.user_name,
-                image: user.avatar_url,
-            })),
+            users: friends,
         })
     } catch (error) {
         console.error("Error:", error)

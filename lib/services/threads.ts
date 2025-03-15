@@ -6,10 +6,11 @@ const supabase = createBrowserSupabaseClient();
 export const threadService = {
   // Thread operations
   async createThread(data: Omit<Thread, 'id' | 'created_at' | 'updated_at' | 'likes_count' | 'dislikes_count' | 'comments_count' | 'views_count'>) {
-    // Make sure user_id is a string
+    // Make sure user_id is a string and tags is an array
     const threadData = {
       ...data,
-      user_id: String(data.user_id)
+      user_id: String(data.user_id),
+      tags: Array.isArray(data.tags) ? data.tags.filter(tag => tag && typeof tag === 'string').map(tag => tag.trim().toLowerCase()) : []
     };
 
     const { data: thread, error } = await supabase
@@ -18,7 +19,10 @@ export const threadService = {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating thread:', error);
+      throw error;
+    }
     return thread;
   },
 
@@ -178,14 +182,27 @@ export const threadService = {
   },
 
   async updateThread(id: string, data: Partial<Thread>) {
+    // Ensure tags is an array if provided
+    const updateData = {
+      ...data,
+      tags: data.tags 
+        ? Array.isArray(data.tags) 
+          ? data.tags.filter(tag => tag && typeof tag === 'string').map(tag => tag.trim().toLowerCase())
+          : []
+        : undefined
+    };
+
     const { data: thread, error } = await supabase
       .from('threads')
-      .update(data)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating thread:', error);
+      throw error;
+    }
     return thread;
   },
 

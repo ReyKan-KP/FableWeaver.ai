@@ -205,8 +205,8 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center space-x-4 xl:space-x-16">
-          {navItems.slice(0, 6).map((item, index) => (
+        <div className="hidden lg:flex items-center space-x-2 xl:space-x-8">
+          {navItems.slice(0, 7).map((item, index) => (
             <div
               key={item.title}
               className="relative"
@@ -492,12 +492,12 @@ export function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link
                     href={
-                      "/friends"
+                      "/tale-tethers"
                     }
                     className="flex items-center"
                   >
                     <Handshake className="mr-2 h-4 w-4" />
-                    Friends
+                    Tale Tethers
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -510,8 +510,8 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="hidden lg:flex items-center pl-4 xl:pl-8 space-x-8 xl:space-x-16">
-              {navItems.slice(7, 9).map((item, index) => (
+            <div className="hidden lg:flex items-center pl-4 xl:pl-4 space-x-4 xl:space-x-8">
+              {navItems.slice(8, 10).map((item, index) => (
                 <div key={item.title} className="relative">
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}

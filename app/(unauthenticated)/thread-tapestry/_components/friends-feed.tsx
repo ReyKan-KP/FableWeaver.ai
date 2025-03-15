@@ -13,14 +13,16 @@ import {
   MessageCircle,
   Share2,
   Flag,
-  Search,
   Loader2,
   User as UserIcon,
   Trash2,
   Bookmark,
+  UserCheck,
+  UserPlus,
+  Search,
   X
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { threadService } from '@/lib/services/threads';
@@ -39,16 +41,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { UserAvatar } from "@/components/user-avatar";
 import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import ThreadCard from "./thread-card";
 
-interface ThreadFeedProps {
+interface FriendsFeedProps {
   onThreadSelect: (threadId: string) => void;
 }
 
-export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
+export default function FriendsFeed({ onThreadSelect }: FriendsFeedProps) {
   const { data: session, status } = useSession();
   const user = session?.user;
   const supabase = createBrowserSupabaseClient();
-  const { toast } = useToast();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,6 +69,7 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [threadToDelete, setThreadToDelete] = useState<string | null>(null);
   const [savedThreads, setSavedThreads] = useState<Record<string, boolean>>({});
+  const [friendIds, setFriendIds] = useState<string[]>([]);
 
   const categories = [
     "discussion",
@@ -76,9 +85,11 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
   const debouncedSearch = useCallback(
     debounce((query: string) => {
       setSearchQuery(query);
-      fetchThreads();
+      if (friendIds.length > 0) {
+        fetchThreads();
+      }
     }, 500),
-    []
+    [friendIds]
   );
 
   // Handle input change with debounce
@@ -96,8 +107,16 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
   };
 
   useEffect(() => {
-    fetchThreads();
-  }, [selectedCategory, sortBy]);
+    if (user?.id) {
+      fetchFriends();
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (friendIds.length > 0) {
+      fetchThreads();
+    }
+  }, [friendIds, selectedCategory, sortBy]);
 
   useEffect(() => {
     if (user?.id) {
@@ -105,6 +124,41 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
       fetchSavedThreads();
     }
   }, [user?.id, threads]);
+
+  const fetchFriends = async () => {
+    if (!user?.id) return;
+    
+    try {
+      // Fetch accepted friendships (friends)
+      const { data: acceptedFriendships, error: friendsError } = await supabase
+        .from("friendships")
+        .select(`
+          id,
+          user_id,
+          friend_id,
+          status
+        `)
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
+        .eq("status", "accepted");
+      
+      if (friendsError) {
+        console.error("Error fetching friends:", friendsError);
+        return;
+      }
+      
+      // Extract friend IDs
+      const friendIdList = acceptedFriendships.map(friendship => {
+        // Determine which user is the friend (not the current user)
+        return friendship.user_id === user.id 
+          ? friendship.friend_id 
+          : friendship.user_id;
+      });
+      
+      setFriendIds(friendIdList);
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+    }
+  };
 
   const fetchUserReactions = async () => {
     if (!user?.id || threads.length === 0) return;
@@ -164,22 +218,34 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
   };
 
   const fetchThreads = async () => {
+    if (friendIds.length === 0) {
+      setThreads([]);
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       setIsSearching(!!searchQuery);
-      const data = await threadService.getThreads({
+      
+      // Get all threads
+      const allThreads = await threadService.getThreads({
         category: selectedCategory || undefined,
         search: searchQuery || undefined,
         sort: sortBy,
-        limit: 20
+        limit: 50 // Fetch more to filter
       });
-      setThreads(data);
+      
+      // Filter threads to only include those from friends
+      const friendThreads = allThreads.filter(thread => 
+        friendIds.includes(thread.user_id)
+      );
+      
+      setThreads(friendThreads);
     } catch (error) {
       console.error('Error fetching threads:', error);
-      toast({
-        title: "Error loading threads",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error loading threads", {
+        description: "Something went wrong. Please try again."
       });
     } finally {
       setLoading(false);
@@ -194,10 +260,8 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
 
   const handleReaction = async (threadId: string, type: 'like' | 'dislike') => {
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to react to threads.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to react to threads."
       });
       return;
     }
@@ -276,20 +340,16 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
       fetchThreads();
     } catch (error) {
       console.error('Error handling reaction:', error);
-      toast({
-        title: "Error with reaction",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error with reaction", {
+        description: "Something went wrong. Please try again."
       });
     }
   };
 
   const handleReport = async (threadId: string) => {
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to report threads.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to report threads."
       });
       return;
     }
@@ -301,35 +361,29 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
         target_id: threadId,
         reason: 'Inappropriate content'
       });
-      toast({
-        title: "Thread reported",
-        description: "Thank you for helping us maintain a safe community.",
+      toast.success("Thread reported", {
+        description: "Thank you for helping us maintain a safe community."
       });
     } catch (error) {
       console.error('Error reporting thread:', error);
-      toast({
-        title: "Error reporting thread",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error reporting thread", {
+        description: "Something went wrong. Please try again."
       });
     }
   };
 
   const handleDeleteThread = async (threadId: string) => {
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to delete threads.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to delete threads."
       });
       return;
     }
 
     try {
       await threadService.deleteThread(threadId);
-      toast({
-        title: "Thread deleted",
-        description: "Your thread has been deleted.",
+      toast.success("Thread deleted", {
+        description: "Your thread has been deleted."
       });
       // Remove the thread from the local state
       setThreads(prevThreads => prevThreads.filter(thread => thread.id !== threadId));
@@ -337,20 +391,16 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
       setThreadToDelete(null);
     } catch (error) {
       console.error('Error deleting thread:', error);
-      toast({
-        title: "Error deleting thread",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error deleting thread", {
+        description: "Something went wrong. Please try again."
       });
     }
   };
 
   const handleSave = async (threadId: string) => {
     if (!user?.id) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to save threads.",
-        variant: "destructive",
+      toast.error("Authentication required", {
+        description: "Please sign in to save threads."
       });
       return;
     }
@@ -358,26 +408,27 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
     try {
       if (savedThreads[threadId]) {
         await threadService.unsaveThread(user.id, threadId);
-        toast({
-          title: "Thread unsaved",
-          description: "Thread has been removed from your saved items.",
+        toast.success("Thread unsaved", {
+          description: "Thread has been removed from your saved items."
         });
       } else {
         await threadService.saveThread(user.id, threadId);
-        toast({
-          title: "Thread saved",
-          description: "Thread has been added to your saved items.",
+        toast.success("Thread saved", {
+          description: "Thread has been added to your saved items."
         });
       }
       setSavedThreads(prev => ({ ...prev, [threadId]: !prev[threadId] }));
     } catch (error) {
       console.error('Error saving/unsaving thread:', error);
-      toast({
-        title: "Error updating saved status",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error updating saved status", {
+        description: "Something went wrong. Please try again."
       });
     }
+  };
+
+  const handleDeleteConfirmation = (threadId: string) => {
+    setThreadToDelete(threadId);
+    setDeleteDialogOpen(true);
   };
 
   return (
@@ -387,7 +438,7 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
         <form onSubmit={handleSearch} className="flex-1 relative">
           <div className="relative">
             <Input
-              placeholder="Search threads..."
+              placeholder="Search friends' threads..."
               value={searchInputValue}
               onChange={handleSearchInputChange}
               className="glass pr-16"
@@ -415,6 +466,7 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
             variant={sortBy === 'latest' ? 'default' : 'outline'}
             onClick={() => setSortBy('latest')}
             className="hover:scale-105"
+            size="sm"
           >
             Latest
           </Button>
@@ -422,6 +474,7 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
             variant={sortBy === 'popular' ? 'default' : 'outline'}
             onClick={() => setSortBy('popular')}
             className="hover:scale-105"
+            size="sm"
           >
             Popular
           </Button>
@@ -468,198 +521,51 @@ export default function ThreadFeed({ onThreadSelect }: ThreadFeedProps) {
         <div className="flex justify-center items-center h-64">
           <Loader2 className="w-8 h-8 animate-spin" />
         </div>
+      ) : threads.length === 0 ? (
+        <div className="flex flex-col justify-center items-center h-64 space-y-4">
+          <UserCheck className="w-16 h-16 text-gray-400" />
+          <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300">No friend posts found</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
+            Your friends haven&apos;t posted any threads yet, or you haven&apos;t added any friends.
+            Add friends to see their posts here.
+          </p>
+        </div>
       ) : (
         <div className="space-y-4">
-          {threads.map((thread) => (
-            <motion.div
-              key={thread.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => onThreadSelect(thread.id)}>
-                <div className="space-y-4">
-                  {/* Thread Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <UserAvatar
-                          userId={thread.user_id}
-                          userName={thread.user?.user_name || `User ${thread.user_id.slice(0, 4)}`}
-                          avatarUrl={thread.user?.avatar_url || null}
-                          size="sm"
-                        />
-                        <div>
-                          <Link href={`/user/${thread.user?.user_name || thread.user_id}`} className="font-medium hover:underline">
-                            {thread.user?.user_name || `User ${thread.user_id.slice(0, 4)}`}
-                          </Link>
-                          <p className="text-xs text-gray-500">{new Date(thread.created_at).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <h3 className="text-lg font-semibold">{thread.title}</h3>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="capitalize">
-                          {thread.category}
-                        </Badge>
-                        {thread.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {user?.id === thread.user_id && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setThreadToDelete(thread.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="hover:scale-110 transition-transform text-red-500 hover:text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleReport(thread.id);
-                        }}
-                        className="hover:scale-110 transition-transform"
-                      >
-                        <Flag className="w-4 h-4" />
-                      </Button>
-                      <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`p-2 ${savedThreads[thread.id] ? 'text-blue-500' : 'text-gray-500 hover:text-blue-500'}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSave(thread.id);
-                      }}
-                    >
-                      <Bookmark className="w-5 h-5" />
-                    </motion.button>
-                    </div>
-                    
-                  </div>
-
-                  {/* Thread Content */}
-                  <p className="text-gray-600 dark:text-gray-300 line-clamp-3">
-                    {thread.content}
-                  </p>
-
-                  {/* Thread Images */}
-                  {thread.images.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {thread.images.slice(0, 3).map((image, index) => (
-                        <div key={index} className="relative aspect-square rounded-lg overflow-hidden">
-                          <Image
-                            src={image}
-                            alt={`Thread image ${index + 1}`}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      ))}
-                      {thread.images.length > 3 && (
-                        <div className="relative aspect-square rounded-lg overflow-hidden bg-black/50 flex items-center justify-center">
-                          <span className="text-white text-sm">
-                            +{thread.images.length - 3}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Thread Actions */}
-                  <div className="flex items-center gap-4">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`flex items-center gap-1 ${
-                        userReactions[thread.id] === 'like'
-                          ? 'text-blue-500'
-                          : 'text-gray-500 hover:text-blue-500'
-                      } ${userReactions[thread.id] === 'dislike' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (userReactions[thread.id] !== 'dislike') {
-                          handleReaction(thread.id, 'like');
-                        }
-                      }}
-                      disabled={userReactions[thread.id] === 'dislike'}
-                    >
-                      <ThumbsUp className="w-4 h-4" />
-                      {thread.likes_count}
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`flex items-center gap-1 ${
-                        userReactions[thread.id] === 'dislike'
-                          ? 'text-red-500'
-                          : 'text-gray-500 hover:text-red-500'
-                      } ${userReactions[thread.id] === 'like' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (userReactions[thread.id] !== 'like') {
-                          handleReaction(thread.id, 'dislike');
-                        }
-                      }}
-                      disabled={userReactions[thread.id] === 'like'}
-                    >
-                      <ThumbsDown className="w-4 h-4" />
-                      {thread.dislikes_count}
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`flex items-center gap-2 hover:scale-105 transition-transform ${
-                        expandedThreadId === thread.id ? 'text-blue-500' : 'hover:text-blue-500'
-                      }`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedThreadId(expandedThreadId === thread.id ? null : thread.id);
-                      }}
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      {thread.comments_count}
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="flex items-center gap-2 hover:scale-105 transition-transform hover:text-blue-500"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // TODO: Implement share functionality
-                        toast({
-                          title: "Share coming soon",
-                          description: "We're working on sharing functionality.",
-                        });
-                      }}
-                    >
-                      <Share2 className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-
-                  {/* Comments Section */}
-                  {expandedThreadId === thread.id && (
-                    <div className="mt-4 pt-4 border-t">
-                      <Comments threadId={thread.id} />
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </motion.div>
-          ))}
+          {/* Add Friends Card */}
+          <Link href="/tale-tethers" className="block w-full max-w-md mx-auto mt-4">
+            <Card className="p-6 hover:shadow-lg transition-all cursor-pointer border-dashed border-2 hover:border-blue-500 hover:scale-105 flex flex-col items-center justify-center gap-3">
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full">
+                <UserPlus className="w-8 h-8 text-blue-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">Connect with More Friends</h3>
+              <p className="text-center text-gray-600 dark:text-gray-400">
+                Discover and connect with more friends to see their threads and stories in your feed.
+              </p>
+              <Button variant="outline" className="mt-2 border-blue-500 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30">
+                Find Friends
+              </Button>
+            </Card>
+          </Link>
+          
+          {/* Thread Cards */}
+          <div className="grid grid-cols-1 gap-4">
+            {threads.map((thread) => (
+              <ThreadCard
+                key={thread.id}
+                thread={thread}
+                onThreadSelect={onThreadSelect}
+                userReaction={userReactions[thread.id] || null}
+                isSaved={savedThreads[thread.id] || false}
+                expandedThreadId={expandedThreadId}
+                setExpandedThreadId={setExpandedThreadId}
+                onReaction={handleReaction}
+                onSave={handleSave}
+                onReport={handleReport}
+                onDelete={handleDeleteConfirmation}
+              />
+            ))}
+          </div>
         </div>
       )}
 
