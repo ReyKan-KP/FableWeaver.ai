@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 
 // Initialize Google AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
 
 export const maxDuration = 60;
 
@@ -24,11 +24,14 @@ export async function POST(req: Request) {
         }
 
         // 2. Parse request body
-        let prompt, genre;
+        let prompt, genre, title, description, coverImageUrl;
         try {
             const body = await req.json();
             prompt = body.prompt;
             genre = body.genre;
+            title = body.title;
+            description = body.description;
+            coverImageUrl = body.coverImageUrl;
         } catch (error) {
             console.error("Failed to parse request body:", error);
             return NextResponse.json(
@@ -37,9 +40,9 @@ export async function POST(req: Request) {
             );
         }
 
-        if (!prompt) {
+        if (!prompt || !genre || !title || !description) {
             return NextResponse.json(
-                { error: "Prompt is required" },
+                { error: "Missing required fields" },
                 { status: 400 }
             );
         }
@@ -93,8 +96,9 @@ export async function POST(req: Request) {
             );
         }
 
-        // 6. Store the generated story in Supabase
+        // 6. Store the generated story and create novel in Supabase
         try {
+            // First, insert the story
             const { data: storyData, error: storyError } = await supabase
                 .from('stories')
                 .insert([
@@ -113,14 +117,37 @@ export async function POST(req: Request) {
                 throw storyError;
             }
 
+            // Then, create the novel
+            const { data: novel, error: novelError } = await supabase
+                .from('novels')
+                .insert([
+                    {
+                        id: storyData.id,
+                        title,
+                        genre,
+                        description,
+                        user_id: session.user.id,
+                        cover_image: coverImageUrl,
+                        is_public: true,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                    }
+                ])
+                .select()
+                .single();
+
+            if (novelError) {
+                throw novelError;
+            }
+
             return NextResponse.json({
                 story: generatedStory,
-                storyId: storyData.id
+                novel: novel
             });
         } catch (error) {
-            console.error("Failed to store story in database:", error);
+            console.error("Failed to store story and create novel:", error);
             return NextResponse.json(
-                { error: "Failed to store story in database" },
+                { error: "Failed to store story and create novel" },
                 { status: 500 }
             );
         }

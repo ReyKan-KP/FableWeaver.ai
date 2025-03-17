@@ -57,6 +57,7 @@ import {
 import { useRouter } from 'next/navigation';
 import Loading from "./loading";
 import UserPreferences from './_components/user-preferences';
+import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 
 const contentTypes = [
   { id: 'anime', label: 'Anime', icon: <Tv className="w-4 h-4" /> },
@@ -389,15 +390,30 @@ export default function LoreLensPage() {
               </Card>
 
               {/* Results */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {results.map((result) => (
-                  <ContentCard 
-                    key={result.content.id} 
-                    content={result.content} 
-                    onSaveStatusChange={handleSaveStatusChange}
-                  />
-                ))}
-              </div>
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <TextShimmerWave
+                    className='[--base-color:#0D74CE] [--base-gradient-color:#5EB1EF]'
+                    duration={1}
+                    spread={1}
+                    zDistance={1}
+                    scaleDistance={1.1}
+                    rotateYDistance={20}
+                  >
+                    Creating the perfect recommendation for you...
+                  </TextShimmerWave>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {results.map((result) => (
+                    <ContentCard 
+                      key={result.content.id} 
+                      content={result.content} 
+                      onSaveStatusChange={handleSaveStatusChange}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Empty State */}
               {!loading && results.length === 0 && (

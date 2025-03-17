@@ -15,8 +15,53 @@ export default function AuthLayout({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="min-h-screen"
+        className="min-h-screen  relative overflow-hidden"
       >
+        {/* Animated background elements */}
+        <motion.div
+          className="absolute inset-0 overflow-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+        >
+          <motion.div
+            className="absolute -top-40 -right-40 w-80 h-80 bg-violet-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 90, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+          <motion.div
+            className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, -90, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-teal-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 45, 0],
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -27,7 +72,7 @@ export default function AuthLayout({
             stiffness: 100,
             damping: 20,
           }}
-          className="container mx-auto px-4 py-8 pt-16"
+          className="container relative z-10 mx-auto px-4 py-8 pt-16"
         >
           <motion.div
             className="relative z-10 w-full max-w-7xl mx-auto"
@@ -41,7 +86,7 @@ export default function AuthLayout({
             }}
           >
             <motion.div
-              className="backdrop-blur-lg rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700"
+              className="backdrop-blur-xl rounded-2xl shadow-2xl border border-neutral-200/50"
               whileHover={{
                 boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
                 transition: { duration: 0.3 },

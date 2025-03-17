@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { CgFeed as FeedIcon } from "react-icons/cg";
+import { useSession } from "next-auth/react";
 
 interface FooterLink {
   href: string;
@@ -39,6 +40,7 @@ interface FooterSection {
 }
 
 const Footer = () => {
+  const { data: session } = useSession();
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
 
@@ -48,10 +50,10 @@ const Footer = () => {
 
     setIsSubscribing(true);
     try {
-      const response = await fetch("/api/subscribe", {
+      const response = await fetch("/api/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, user_id: session?.user?.id, type: "newsletter" }),
       });
 
       if (!response.ok) throw new Error("Failed to subscribe");

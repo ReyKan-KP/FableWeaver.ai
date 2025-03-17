@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { LogIn } from "lucide-react";
 
 export default function SignIn() {
   const mouseX = useMotionValue(0);
@@ -39,7 +40,7 @@ export default function SignIn() {
 
   return (
     <motion.section
-      className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-background/80"
+      className="min-h-screen flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -64,7 +65,7 @@ export default function SignIn() {
             transition={{ duration: 0.5 }}
           >
             <motion.div
-              className="flex flex-col justify-center p-6 sm:p-8  backdrop-blur-sm rounded-2xl"
+              className="flex flex-col justify-center p-6 sm:p-8 backdrop-blur-sm rounded-2xl"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -75,10 +76,19 @@ export default function SignIn() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
+                  className="flex items-center gap-3 mb-4"
                 >
-                  <CardTitle className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
-                    Welcome Back to FableWeaver.ai
-                  </CardTitle>
+                  <div className="bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 p-2 rounded-lg">
+                    <LogIn className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 via-blue-600 to-teal-500 bg-clip-text text-transparent">
+                      Welcome Back to FableWeaver.ai
+                    </CardTitle>
+                    <CardDescription className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                      Continue your storytelling journey
+                    </CardDescription>
+                  </div>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -127,7 +137,7 @@ export default function SignIn() {
                   objectFit="contain"
                 />
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-lg"
+                  className="absolute inset-0 bg-gradient-to-r from-violet-600/20 via-blue-600/20 to-teal-500/20 rounded-lg"
                   animate={{
                     opacity: [0, 0.2, 0],
                   }}

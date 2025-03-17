@@ -114,6 +114,129 @@ async function generateChapterContent(prompt: string, retryCount = 0): Promise<a
     }
 }
 
+// Add new function to handle character progression
+async function updateCharacterProgression(
+    supabase: any,
+    novelId: string,
+    chapterId: string,
+    characterArcs: any[],
+    chapterNumber: number
+) {
+    try {
+        // Get all characters for this novel
+        const { data: characters, error: charactersError } = await supabase
+            .from('novels_characters')
+            .select('*')
+            .eq('novel_id', novelId);
+
+        if (charactersError) {
+            console.error('[updateCharacterProgression] Error fetching characters:', charactersError);
+            return;
+        }
+
+        // Process each character arc from the chapter
+        for (const arc of characterArcs) {
+            const character = characters.find((c: any) => c.name === arc.character);
+            if (!character) continue;
+
+            // Get existing progression records for this character to update development_history
+            const { data: existingProgressions, error: fetchError } = await supabase
+                .from('character_progression')
+                .select('development_history')
+                .eq('character_id', character.id)
+                .order('updated_at', { ascending: false })
+                .limit(1);
+
+            if (fetchError) {
+                console.error('[updateCharacterProgression] Error fetching existing progression:', fetchError);
+            }
+
+            // Initialize development_history from existing record or create new
+            let developmentHistory = {};
+            if (existingProgressions && existingProgressions.length > 0 && existingProgressions[0].development_history) {
+                developmentHistory = existingProgressions[0].development_history;
+            }
+
+            // Add current chapter development to history with both chapter_id and chapter_number
+            developmentHistory = {
+                ...developmentHistory,
+                [chapterId]: arc.development,
+                [`chapter_${chapterNumber}`]: arc.development
+            };
+
+            // Insert character progression
+            const { error: progressionError } = await supabase
+                .from('character_progression')
+                .insert({
+                    novel_id: novelId,
+                    chapter_id: chapterId,
+                    character_id: character.id,
+                    character_name: character.name,
+                    development: arc.development,
+                    relationships_changes: arc.relationships || null,
+                    plot_impact: arc.plot_impact || null,
+                    development_history: developmentHistory
+                });
+
+            if (progressionError) {
+                console.error('[updateCharacterProgression] Error inserting progression:', progressionError);
+            }
+        }
+    } catch (error) {
+        console.error('[updateCharacterProgression] Error:', error);
+    }
+}
+
+// Add new function to analyze and update character showcase
+async function updateCharacterShowcase(
+    supabase: any,
+    novelId: string,
+    chapterData: any
+) {
+    try {
+        // Extract character information from the chapter
+        const characterArcs = chapterData.characterArcs || [];
+        const characterRelationships = chapterData.characterRelationships || [];
+
+        // Get existing characters
+        const { data: existingCharacters, error: charactersError } = await supabase
+            .from('novels_characters')
+            .select('*')
+            .eq('novel_id', novelId);
+
+        if (charactersError) {
+            console.error('[updateCharacterShowcase] Error fetching characters:', charactersError);
+            return;
+        }
+
+        // Process new characters from the chapter
+        for (const arc of characterArcs) {
+            const existingCharacter = existingCharacters.find((c: any) => c.name === arc.character);
+            
+            if (!existingCharacter) {
+                // Insert new character
+                const { error: insertError } = await supabase
+                    .from('novels_characters')
+                    .insert({
+                        novel_id: novelId,
+                        name: arc.character,
+                        role: arc.role || 'side_character',
+                        description: arc.description || '',
+                        background: arc.background || '',
+                        personality: arc.personality || '',
+                        physical_description: arc.physical_description || ''
+                    });
+
+                if (insertError) {
+                    console.error('[updateCharacterShowcase] Error inserting character:', insertError);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('[updateCharacterShowcase] Error:', error);
+    }
+}
+
 export async function POST(req: Request) {
     console.log("[POST] Starting chapter generation request");
     try {
@@ -161,6 +284,44 @@ export async function POST(req: Request) {
                 { status: 404 }
             );
         }
+        const { data: characters, error: charactersError } = await supabase
+            .from("novels_characters")
+            .select("*")
+            .eq("novel_id", novelId);
+        if (charactersError) {
+            console.error("[POST] Error fetching characters:", charactersError);
+            return NextResponse.json(
+                { error: "Failed to fetch characters" },
+                { status: 500 }
+            );
+        }
+        const charactersDetails = characters.map((character) => {
+            return {
+                character: character.name,
+                role: character.role,
+                description: character.description,
+                background: character.background,
+                personality: character.personality,
+                physical_description: character.physical_description,
+            };
+        });
+        const charactersDetailsString = JSON.stringify(charactersDetails, null, 2);
+
+        console.log("[POST] Characters details:", charactersDetailsString);
+
+        
+        const {data: charactersProgression, error: charactersProgressionError} = await supabase
+            .from("character_progression")
+            .select("*")
+            .eq("novel_id", novelId)
+            .order("updated_at", { ascending: false })
+            .limit(5);
+
+        if (charactersProgressionError) {
+            console.error("[POST] Error fetching characters progression:", charactersProgressionError);
+        }
+        const charactersProgressionString = JSON.stringify(charactersProgression, null, 2);
+        console.log("[POST] Characters progression:", charactersProgressionString);
 
         // 5. Construct the prompt for the AI
         const genrePrompts = {
@@ -181,6 +342,8 @@ export async function POST(req: Request) {
             .eq('novel_id', novelId)
             .order('chapter_number', { ascending: false })
             .limit(10);
+
+
 
         if (chaptersError) {
             console.error("[POST] Error fetching previous chapters:", chaptersError);
@@ -233,6 +396,10 @@ Novel Description: ${novel.description}
 
 ${previousChapters.length > 0 ? chapterHistoryContext : "This is the first chapter of the novel."}
 
+Use the following character details as a reference and knowledge base for inspiration. No neccessary to use all of them—only take inspiration as needed to create new characters or enrich existing ones. ${charactersDetailsString}
+
+Use the following last 5 character progression details as a reference and knowledge base to guide character development. No neccessary to use them directly in the chapter—only take inspiration to create a unique and updated character progression. ${charactersProgressionString}
+
 User's Request for this chapter: ${prompt}
 
 Important Guidelines:
@@ -243,6 +410,7 @@ Important Guidelines:
 5. Create vivid scenes with descriptive details
 6. Write natural dialogue that reveals character personalities
 7. Maintain consistency with previously established character traits and relationships
+8. Use the characters details and progression as a reference and knowledge base for inspiration. Use them if needed in the chapter not neccessary to use all of them.
 
 You must respond with a complete JSON object in this exact format:
 {
@@ -256,21 +424,22 @@ You must respond with a complete JSON object in this exact format:
     "characterArcs": [
         {
             "character": "characterName",
-            "development": "How this character developed or changed in this chapter"
-        },
-        {
-            "character": "anotherCharacter",
-            "development": "Their development in this chapter"
+            "role": "main_character/main_lead/side_character/extra_character/antagonist",
+            "development": "How this character developed or changed in this chapter",
+            "description": "Brief description of the character if new",
+            "background": "Character's background if new",
+            "personality": "Character's personality traits if new",
+            "physical_description": "Physical description if new",
+            "relationships": "Changes in relationships with other characters",
+            "plot_impact": "How this character's actions impacted the plot"
         }
     ],
     "characterRelationships": [
         {
             "characters": "character1_character2",
-            "development": "How their relationship evolved or changed"
-        },
-        {
-            "characters": "character3_character4",
-            "development": "State of their relationship after this chapter"
+            "development": "How their relationship evolved or changed",
+            "current_status": "Current state of their relationship",
+            "future_potential": "Potential future developments in their relationship"
         }
     ],
     "storyDirection": "A brief analysis of where the story is heading after this chapter and potential future developments"
@@ -354,6 +523,15 @@ After completing the JSON object, write ###END###`;
 
         if (updateError) {
             console.error("[POST] Error updating novel metadata:", updateError);
+        }
+
+        // After successful chapter generation and database insertion
+        if (chapter) {
+            // Update character progression
+            await updateCharacterProgression(supabase, novelId, chapter.id, chapterData.characterArcs, chapterNumber);
+            
+            // Update character showcase
+            await updateCharacterShowcase(supabase, novelId, chapterData);
         }
 
         // 9. Return the created chapter

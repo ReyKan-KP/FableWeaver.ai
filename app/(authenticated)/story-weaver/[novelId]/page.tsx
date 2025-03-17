@@ -55,6 +55,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import ChapterView from "./_components/chapter-view";
 import ExportButton from "./_components/export-button";
+import Collaborators from "./_components/collaboraters";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -113,6 +114,31 @@ interface Collaborator {
   };
 }
 
+interface Character {
+  id: string;
+  novel_id: string;
+  name: string;
+  role: 'main_character' | 'main_lead' | 'side_character' | 'extra';
+  description: string;
+  background: string;
+  personality: string;
+  physical_description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CharacterProgression {
+  id: string;
+  novel_id: string;
+  chapter_id: string;
+  character_id: string;
+  development: string;
+  relationships_changes: string;
+  plot_impact: string;
+  created_at: string;
+  character: Character;
+}
+
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -139,7 +165,6 @@ export default function NovelView() {
   const params = useParams();
   const [novel, setNovel] = useState<Novel | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [chapterRevisions, setChapterRevisions] = useState<ChapterRevision[]>(
     []
@@ -149,14 +174,6 @@ export default function NovelView() {
   const [prompt, setPrompt] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [showRevisionHistory, setShowRevisionHistory] = useState(false);
-  const [showCollaborators, setShowCollaborators] = useState(false);
-  const [newCollaborator, setNewCollaborator] = useState<{
-    email: string;
-    role: "editor" | "viewer";
-  }>({
-    email: "",
-    role: "viewer",
-  });
   const [suggestions, setSuggestions] = useState<{
     plotSuggestions: string[];
     characterSuggestions: string[];
@@ -165,11 +182,23 @@ export default function NovelView() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredChapters, setFilteredChapters] = useState<Chapter[]>([]);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sortField, setSortField] = useState<"chapter_number" | "updated_at">("updated_at");
   const [currentPage, setCurrentPage] = useState(1);
   const chaptersPerPage = 5;
   const supabase = createBrowserSupabaseClient();
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [characterProgressions, setCharacterProgressions] = useState<CharacterProgression[]>([]);
+  const [showAddCharacter, setShowAddCharacter] = useState(false);
+  const [newCharacter, setNewCharacter] = useState<Partial<Character>>({
+    name: '',
+    role: 'side_character',
+    description: '',
+    background: '',
+    personality: '',
+    physical_description: ''
+  });
 
   const loadChapterRevisions = async (chapterId: string) => {
     try {
@@ -189,11 +218,43 @@ export default function NovelView() {
     }
   };
 
+  const loadCharacters = async () => {
+    try {
+      const { data: charactersData, error: charactersError } = await supabase
+        .from('novels_characters')
+        .select('*')
+        .eq('novel_id', params.novelId)
+        .order('created_at', { ascending: true });
+
+      if (charactersError) throw charactersError;
+      setCharacters(charactersData || []);
+
+      // Load character progressions
+      const { data: progressionsData, error: progressionsError } = await supabase
+        .from('character_progression')
+        .select(`
+          *,
+          character:novels_characters(*)
+        `)
+        .eq('novel_id', params.novelId)
+        .order('created_at', { ascending: true });
+
+      if (progressionsError) throw progressionsError;
+      setCharacterProgressions(progressionsData || []);
+    } catch (error) {
+      console.error('Error loading characters:', error);
+      toast.error('Failed to load characters', {
+        description: 'Failed to load character data',
+      });
+    }
+  };
+
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/sign-in");
     } else if (session?.user?.id) {
       loadNovelData();
+      loadCharacters();
     }
   }, [status, session, params.novelId]);
 
@@ -233,24 +294,6 @@ export default function NovelView() {
 
       if (chaptersError) throw chaptersError;
       setChapters(chaptersData || []);
-
-      // Load collaborators
-      const { data: collaboratorsData, error: collabError } = await supabase
-        .from("novel_collaborators")
-        .select(
-          `
-          *,
-          user:users(
-            name,
-            email,
-            image
-          )
-        `
-        )
-        .eq("novel_id", params.novelId);
-
-      if (collabError) throw collabError;
-      setCollaborators(collaboratorsData || []);
 
       // Load tags
       const { data: tagsData, error: tagsError } = await supabase
@@ -308,89 +351,6 @@ export default function NovelView() {
       });
     } finally {
       setIsGenerating(false);
-    }
-  };
-
-  const handleRemoveCollaborator = async (collaboratorId: string) => {
-    try {
-      const { error } = await supabase
-        .from("novel_collaborators")
-        .delete()
-        .eq("id", collaboratorId);
-
-      if (error) throw error;
-
-      setCollaborators((prev) => prev.filter((c) => c.id !== collaboratorId));
-      toast.success("Collaborator removed", {
-        description: "Collaborator removed successfully",
-      });
-    } catch (error) {
-      console.error("Error removing collaborator:", error);
-      toast.error("Failed to remove collaborator", {
-        description: "Failed to remove collaborator",
-      });
-    }
-  };
-
-  const handleAddCollaborator = async () => {
-    if (!newCollaborator.email.trim()) {
-      toast.error("Error", {
-        description: "Please enter an email address",
-      });
-      return;
-    }
-
-    try {
-      // First, get the user ID for the email
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("id")
-        .eq("email", newCollaborator.email)
-        .single();
-
-      if (userError) throw userError;
-
-      if (!userData) {
-        toast.error("Error", {
-          description: "User not found",
-        });
-        return;
-      }
-
-      const { data: collaborator, error } = await supabase
-        .from("novel_collaborators")
-        .insert([
-          {
-            novel_id: params.novelId,
-            user_id: userData.id,
-            role: newCollaborator.role,
-          },
-        ])
-        .select(
-          `
-          *,
-          user:users(
-            name,
-            email,
-            image
-          )
-        `
-        )
-        .single();
-
-      if (error) throw error;
-
-      setCollaborators((prev) => [...prev, collaborator]);
-      setNewCollaborator({ email: "", role: "viewer" });
-      setShowCollaborators(false);
-      toast.success("Collaborator added", {
-        description: "Collaborator added successfully",
-      });
-    } catch (error) {
-      console.error("Error adding collaborator:", error);
-      toast.error("Failed to add collaborator", {
-        description: "Failed to add collaborator",
-      });
     }
   };
 
@@ -481,10 +441,17 @@ export default function NovelView() {
 
     // Apply sorting
     filtered.sort((a, b) => {
-      if (sortDirection === "asc") {
-        return a.chapter_number - b.chapter_number;
+      if (sortField === "chapter_number") {
+        return sortDirection === "asc" 
+          ? a.chapter_number - b.chapter_number
+          : b.chapter_number - a.chapter_number;
       } else {
-        return b.chapter_number - a.chapter_number;
+        // Sort by updated_at
+        const dateA = new Date(a.updated_at).getTime();
+        const dateB = new Date(b.updated_at).getTime();
+        return sortDirection === "asc" 
+          ? dateA - dateB 
+          : dateB - dateA;
       }
     });
 
@@ -500,12 +467,76 @@ export default function NovelView() {
   useEffect(() => {
     const filtered = sortAndFilterChapters();
     setFilteredChapters(filtered);
-  }, [searchQuery, chapters, sortDirection]);
+  }, [searchQuery, chapters, sortDirection, sortField]);
 
   // Calculate pagination values
   const totalChapters = filteredChapters.length;
   const totalPages = Math.ceil(totalChapters / chaptersPerPage);
   const paginatedChapters = paginateChapters(filteredChapters);
+
+  const handleAddCharacter = async () => {
+    try {
+      if (!newCharacter.name?.trim()) {
+        toast.error('Error', {
+          description: 'Please enter a character name',
+        });
+        return;
+      }
+
+      const { data: character, error } = await supabase
+        .from('novels_characters')
+        .insert([
+          {
+            novel_id: params.novelId,
+            ...newCharacter,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCharacters((prev) => [...prev, character]);
+      setNewCharacter({
+        name: '',
+        role: 'side_character',
+        description: '',
+        background: '',
+        personality: '',
+        physical_description: ''
+      });
+      setShowAddCharacter(false);
+      toast.success('Character added', {
+        description: 'Character added successfully',
+      });
+    } catch (error) {
+      console.error('Error adding character:', error);
+      toast.error('Failed to add character', {
+        description: 'Failed to add character',
+      });
+    }
+  };
+
+  const handleDeleteCharacter = async (characterId: string) => {
+    try {
+      const { error } = await supabase
+        .from('novels_characters')
+        .delete()
+        .eq('id', characterId);
+
+      if (error) throw error;
+
+      setCharacters((prev) => prev.filter((c) => c.id !== characterId));
+      toast.success('Character deleted', {
+        description: 'Character deleted successfully',
+      });
+    } catch (error) {
+      console.error('Error deleting character:', error);
+      toast.error('Failed to delete character', {
+        description: 'Failed to delete character',
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -740,6 +771,13 @@ export default function NovelView() {
                 Chapters
               </TabsTrigger>
               <TabsTrigger
+                value="characters"
+                className="flex-1 transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-blue-500 data-[state=active]:text-white"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Characters
+              </TabsTrigger>
+              <TabsTrigger
                 value="suggestions"
                 className="flex-1 transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-teal-500 data-[state=active]:text-white"
               >
@@ -789,24 +827,37 @@ export default function NovelView() {
                         <h2 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500">
                           Your Story Chapters
                         </h2>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            setSortDirection((prev) =>
-                              prev === "asc" ? "desc" : "asc"
-                            )
-                          }
-                          className="flex items-center gap-2 hover:bg-primary/10"
-                        >
-                          <ArrowUpDown className="h-4 w-4" />
-                          <span>
-                            Sort{" "}
-                            {sortDirection === "asc"
-                              ? "Ascending"
-                              : "Descending"}
-                          </span>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:bg-primary/10">
+                                <ArrowUpDown className="h-4 w-4" />
+                                <span>
+                                  Sort by: {sortField === "chapter_number" ? "Chapter" : "Last Updated"}
+                                  {" "}
+                                  ({sortDirection === "asc" ? "Ascending" : "Descending"})
+                                </span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Sort Field</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => setSortField("chapter_number")}>
+                                Chapter Number
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setSortField("updated_at")}>
+                                Last Updated
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel>Direction</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => setSortDirection("asc")}>
+                                Ascending
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setSortDirection("desc")}>
+                                Descending
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
 
                       <ChapterView
@@ -924,6 +975,217 @@ export default function NovelView() {
                     </div>
                   </Card>
                 </motion.div>
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="characters">
+              <motion.div
+                variants={fadeIn}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={springTransition}
+              >
+                <Card className="p-6 border-2 border-gradient-to-r from-violet-500/20 via-blue-500/20 to-teal-500/20 bg-[#bccff1] dark:bg-zinc-900">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500">
+                      Characters
+                    </h2>
+                    <Dialog open={showAddCharacter} onOpenChange={setShowAddCharacter}>
+                      <DialogTrigger asChild>
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button className="bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 text-white">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Character
+                          </Button>
+                        </motion.div>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add New Character</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Name</label>
+                            <Input
+                              type="text"
+                              placeholder="Character name"
+                              value={newCharacter.name}
+                              onChange={(e) =>
+                                setNewCharacter((prev) => ({
+                                  ...prev,
+                                  name: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Role</label>
+                            <select
+                              className="w-full p-2 border rounded-md"
+                              value={newCharacter.role}
+                              onChange={(e) =>
+                                setNewCharacter((prev) => ({
+                                  ...prev,
+                                  role: e.target.value as Character['role'],
+                                }))
+                              }
+                            >
+                              <option value="main_character">Main Character</option>
+                              <option value="main_lead">Main Lead</option>
+                              <option value="side_character">Side Character</option>
+                              <option value="extra">Extra</option>
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Description</label>
+                            <Textarea
+                              placeholder="Brief description of the character"
+                              value={newCharacter.description}
+                              onChange={(e) =>
+                                setNewCharacter((prev) => ({
+                                  ...prev,
+                                  description: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Background</label>
+                            <Textarea
+                              placeholder="Character's background story"
+                              value={newCharacter.background}
+                              onChange={(e) =>
+                                setNewCharacter((prev) => ({
+                                  ...prev,
+                                  background: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Personality</label>
+                            <Textarea
+                              placeholder="Character's personality traits"
+                              value={newCharacter.personality}
+                              onChange={(e) =>
+                                setNewCharacter((prev) => ({
+                                  ...prev,
+                                  personality: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Physical Description</label>
+                            <Textarea
+                              placeholder="Character's physical appearance"
+                              value={newCharacter.physical_description}
+                              onChange={(e) =>
+                                setNewCharacter((prev) => ({
+                                  ...prev,
+                                  physical_description: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                          <Button className="w-full" onClick={handleAddCharacter}>
+                            Add Character
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {characters.map((character) => (
+                      <ScrollArea key={character.id} className="h-[500px]">
+                      <motion.div
+                        key={character.id}
+                        variants={fadeIn}
+                        className="bg-white/50 dark:bg-zinc-800/50 rounded-lg p-6 border border-primary/10 hover:border-primary/30 transition-all duration-300"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-semibold">{character.name}</h3>
+                            <span className="text-sm text-muted-foreground capitalize">
+                              {character.role.replace('_', ' ')}
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteCharacter(character.id)}
+                          >
+                            <Trash className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          {character.description && (
+                            <div>
+                              <h4 className="text-sm font-medium mb-1">Description</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {character.description}
+                              </p>
+                            </div>
+                          )}
+
+                          {character.background && (
+                            <div>
+                              <h4 className="text-sm font-medium mb-1">Background</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {character.background}
+                              </p>
+                            </div>
+                          )}
+
+                          {character.personality && (
+                            <div>
+                              <h4 className="text-sm font-medium mb-1">Personality</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {character.personality}
+                              </p>
+                            </div>
+                          )}
+
+                          {character.physical_description && (
+                            <div>
+                              <h4 className="text-sm font-medium mb-1">Physical Description</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {character.physical_description}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Character Progression */}
+                          <div>
+                            <h4 className="text-sm font-medium mb-2">Recent Development</h4>
+                            <ScrollArea className="h-[100px]">
+                              <div className="space-y-2">
+                                {characterProgressions
+                                  .filter((prog) => prog.character_id === character.id)
+                                  .slice(-3)
+                                  .map((prog) => (
+                                    <div
+                                      key={prog.id}
+                                      className="text-sm text-muted-foreground border-l-2 border-primary/20 pl-2"
+                                    >
+                                      {prog.development}
+                                    </div>
+                                  ))}
+                              </div>
+                            </ScrollArea>
+                          </div>
+                        </div>
+                      </motion.div>
+                      </ScrollArea>
+                    ))}
+                  </div>
+                </Card>
               </motion.div>
             </TabsContent>
 
@@ -1187,7 +1449,13 @@ export default function NovelView() {
                                 Chapter {chapter.chapter_number}:{" "}
                                 {chapter.title}
                               </h3>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                {sortField === "updated_at" && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                    <History className="h-3 w-3 mr-1" />
+                                    Updated
+                                  </span>
+                                )}
                                 Last updated: {formatDate(chapter.updated_at)}
                               </p>
                             </div>
@@ -1233,113 +1501,7 @@ export default function NovelView() {
                 exit="exit"
                 transition={springTransition}
               >
-                <Card className="p-6 border-2 border-gradient-to-r from-violet-500/20 via-blue-500/20 to-teal-500/20 bg-[#bccff1] dark:bg-zinc-900">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500">
-                      Collaborators
-                    </h2>
-                    <Dialog
-                      open={showCollaborators}
-                      onOpenChange={setShowCollaborators}
-                    >
-                      <DialogTrigger asChild>
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Button className="bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 text-white">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Collaborator
-                          </Button>
-                        </motion.div>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Add Collaborator</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Email</label>
-                            <Input
-                              type="email"
-                              placeholder="Enter collaborator's email"
-                              value={newCollaborator.email}
-                              onChange={(e) =>
-                                setNewCollaborator((prev) => ({
-                                  ...prev,
-                                  email: e.target.value,
-                                }))
-                              }
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Role</label>
-                            <select
-                              className="w-full p-2 border rounded-md"
-                              value={newCollaborator.role}
-                              onChange={(e) =>
-                                setNewCollaborator((prev) => ({
-                                  ...prev,
-                                  role: e.target.value as "editor" | "viewer",
-                                }))
-                              }
-                            >
-                              <option value="viewer">Viewer</option>
-                              <option value="editor">Editor</option>
-                            </select>
-                          </div>
-                          <Button
-                            className="w-full"
-                            onClick={handleAddCollaborator}
-                          >
-                            Add Collaborator
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                  <div className="space-y-4">
-                    {collaborators.map((collaborator) => (
-                      <motion.div
-                        key={collaborator.id}
-                        variants={fadeIn}
-                        className="flex justify-between items-center p-4 border rounded-lg hover:bg-gradient-to-r hover:from-violet-500/5 hover:via-blue-500/5 hover:to-teal-500/5 transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-4">
-                          {collaborator.user.image && (
-                            <Image
-                              src={collaborator.user.image}
-                              alt={collaborator.user.name}
-                              className="w-10 h-10 rounded-full"
-                              width={40}
-                              height={40}
-                            />
-                          )}
-                          <div>
-                            <p className="font-medium">
-                              {collaborator.user.name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {collaborator.user.email}
-                            </p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                              {collaborator.role}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleRemoveCollaborator(collaborator.id)
-                          }
-                        >
-                          <Trash className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </motion.div>
-                    ))}
-                  </div>
-                </Card>
+                <Collaborators novelId={params.novelId as string} />
               </motion.div>
             </TabsContent>
 
@@ -1630,14 +1792,19 @@ export default function NovelView() {
             </motion.div>
           </div>
 
-          <div className="mt-6 flex justify-end">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mt-8 flex justify-end"
+          >
             <Button
               onClick={() => setShowHelpModal(false)}
               className="bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 text-white"
             >
               Got it, thanks!
             </Button>
-          </div>
+          </motion.div>
         </DialogContent>
       </Dialog>
     </motion.div>

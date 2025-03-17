@@ -77,6 +77,12 @@ const menuItems = [
     color: "from-orange-500 to-red-500",
   },
   {
+    title: "Contact Submissions",
+    icon: MessageSquare,
+    href: "/admin/contact",
+    color: "from-purple-500 to-pink-500",
+  },
+  {
     title: "Chapter Revisions",
     icon: FileText,
     href: "/admin/revisions",

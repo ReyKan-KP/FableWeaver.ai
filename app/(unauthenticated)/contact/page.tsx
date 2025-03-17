@@ -16,13 +16,18 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 const ContactPage = () => {
+  const { data: session } = useSession();
+  
   const [formState, setFormState] = useState({
+    user_id: session?.user?.id,
     name: "",
     email: "",
     message: "",
   });
+
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,23 +45,29 @@ const ContactPage = () => {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to send message");
+        throw new Error(data.error || "Failed to send message");
       }
 
-      toast("Success!", {
-        description: "Message sent successfully! I'll get back to you soon.",
+      toast.success("Message sent!", {
+        description: "Your message has been saved and sent successfully! I'll get back to you soon.",
+        icon: <CheckCircle2 className="w-4 h-4 text-green-500" />,
       });
 
       // Reset form
       setFormState({
+        user_id: session?.user?.id,
         name: "",
         email: "",
         message: "",
       });
     } catch (error) {
-      toast.error("Error", {
-        description: "Failed to send message. Please try again later.",
+      console.error("Contact form error:", error);
+      toast.error("Message failed", {
+        description: "There was a problem sending your message. Please try again later.",
+        icon: <XCircle className="w-4 h-4 text-red-500" />,
       });
     } finally {
       setIsSubmitting(false);

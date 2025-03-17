@@ -43,10 +43,24 @@ export async function POST(req: Request) {
             .eq("user_id", session.user.id)
             .single();
 
+        const { data: charactersProgression, error: charactersProgressionError } = await supabase
+            .from("character_progression")
+            .select("*")
+            .eq("novel_id", novelId)
+            .order("created_at", { ascending: false })
+            .limit(5);
+
         if (novelError || !novel) {
             return NextResponse.json(
                 { error: "Novel not found or access denied" },
                 { status: 404 }
+            );
+        }
+
+        if (charactersProgressionError) {
+            return NextResponse.json(
+                { error: "Error fetching characters" },
+                { status: 500 }
             );
         }
 
@@ -63,6 +77,15 @@ export async function POST(req: Request) {
             };
         });
 
+        const characterProgression = charactersProgression.map((character) => {
+            return {
+                character: character.character_name,
+                development: character.development,
+                relationships_changes: character.relationships_changes,
+                plot_impact: character.plot_impact
+            };
+        });
+
         // 6. Generate suggestions
         const prompt = `As a ${novel.genre} story expert, analyze this novel and suggest content for the next chapter.
 
@@ -72,6 +95,9 @@ Genre: ${novel.genre}
 
 Previous Chapters History:
 ${JSON.stringify(chapterHistory, null, 2)}
+
+Character Progression:
+${JSON.stringify(characterProgression, null, 2)}
 
 Based on the story's progression, character development, and established plot threads, provide:
 1. 5 potential plot points that could be explored in the next chapter

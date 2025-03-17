@@ -299,18 +299,51 @@ export default function StoryWeaver() {
         });
       }
 
-      const { data: novel, error } = await supabase.from("novels").insert([
-        {
-          title: newNovel.title,
-          genre: newNovel.genre,
-          description: newNovel.description,
-          user_id: session?.user?.id,
-          cover_image: coverImageUrl,
-          is_public: newNovel.is_public,
+      // Step 1: Generate story and create novel
+      const storyResponse = await fetch("/api/story-weaver", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ]).select().single();
+        body: JSON.stringify({
+          prompt: `Create a story about ${newNovel.title}. ${newNovel.description}`,
+          genre: newNovel.genre,
+          title: newNovel.title,
+          description: newNovel.description,
+          coverImageUrl: coverImageUrl,
+        }),
+      });
 
-      if (error) throw error;
+      if (!storyResponse.ok) {
+        throw new Error("Failed to generate story");
+      }
+
+      const { novel } = await storyResponse.json();
+
+      // Step 2: Generate and create characters
+      const characterResponse = await fetch("/api/story-weaver/generate-characters", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          novelId: novel.id,
+          genre: newNovel.genre,
+          title: newNovel.title,
+          description: newNovel.description,
+        }),
+      });
+
+      if (!characterResponse.ok) {
+        console.error("Failed to generate characters, but novel was created");
+        // Don't throw here, as the novel was created successfully
+      } else {
+        const { characters } = await characterResponse.json();
+        toast({
+          title: "Characters Generated",
+          description: `Successfully created ${characters.length} initial characters for your novel.`,
+        });
+      }
 
       toast({
         title: "Novel Created",
