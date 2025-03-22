@@ -794,11 +794,8 @@ export function UserProfile({
                             From: {character.content_source}
                           </span>
                           <motion.a
-                            href={`/chatbot/${character.id}`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="px-4 py-2 bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 text-white 
-                                rounded-full hover:shadow-lg transform transition-all duration-300 flex items-center gap-2"
+                            href={`/chatbot/${character.name.toLowerCase().replace(/\s+/g, '-')}`}
+                            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 rounded-full hover:from-violet-600 hover:via-blue-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                           >
                             <Sparkles className="w-4 h-4" />
                             Chat Now

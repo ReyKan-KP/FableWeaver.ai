@@ -12,7 +12,9 @@ export async function GET() {
         const { data, error } = await supabase
             .from("chapters")
             .select("novel_id, is_published")
-            .eq("is_published", true);
+            .eq("is_published", true)
+            .eq("is_public", true)
+            .order("chapter_number", { ascending: true });
 
         if (error) {
             console.error("Error fetching published chapters:", error);

@@ -74,7 +74,7 @@ export function DeleteNovelDialog({
             Delete Novel
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete "{novelTitle}"? This action cannot be
+            Are you sure you want to delete &quot;{novelTitle}&quot;? This action cannot be
             undone. All associated chapters, comments, and data will be permanently
             deleted.
           </DialogDescription>

@@ -970,7 +970,7 @@ export default function NovelView() {
                 <div className="mt-2 text-sm text-green-700 dark:text-green-500">
                   <p>
                     Congratulations! Your novel has been approved by our admins. You can now freely publish or unpublish it at any time 
-                    without requiring additional review. Toggle the "Published" switch to control its visibility.
+                    without requiring additional review. Toggle the &quot;Published&quot; switch to control its visibility.
                   </p>
                 </div>
               </div>
@@ -2091,7 +2091,7 @@ export default function NovelView() {
                 Admin Review Required
               </h3>
               <p className="mt-2 text-sm text-yellow-700 dark:text-yellow-500">
-                Publishing this novel will submit it for admin review. The status will be set to 'pending' until approved.
+                Publishing this novel will submit it for admin review. The status will be set to &quot;pending&quot; until approved.
               </p>
             </div>
             <p className="text-sm text-muted-foreground">

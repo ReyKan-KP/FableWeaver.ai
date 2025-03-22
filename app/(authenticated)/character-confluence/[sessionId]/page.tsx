@@ -432,9 +432,12 @@ export default function GroupChatSession() {
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      <Link
+                        href={`/chatbot/${character.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        className="text-sm font-medium text-gray-700 dark:text-gray-200 hover:underline"
+                      >
                         {character.name}
-                      </span>
+                      </Link>
                     </div>
                   ))}
                 </div>

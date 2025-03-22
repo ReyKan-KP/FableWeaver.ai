@@ -14,6 +14,7 @@ import {
   Heart,
   Share2,
   Menu,
+  ChevronUp,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -72,6 +73,7 @@ export default function NovelDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [readingStatus, setReadingStatus] = useState<string | undefined>();
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [sortAscending, setSortAscending] = useState(true);
   const [views, setViews] = useState<{
     total_views: number;
     unique_users: number;
@@ -286,7 +288,18 @@ export default function NovelDetailPage() {
 
           <div className="md:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Chapters</h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-2xl font-bold">Chapters</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSortAscending(!sortAscending)}
+                  className="gap-2"
+                >
+                  <ChevronUp className={cn("w-4 h-4 transition-transform", !sortAscending && "rotate-180")} />
+                  {sortAscending ? "Oldest First" : "Newest First"}
+                </Button>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -310,6 +323,11 @@ export default function NovelDetailPage() {
             <div className="space-y-4">
               {novel?.chapters
                 .filter((chapter) => chapter.is_published)
+                .sort((a, b) => 
+                  sortAscending 
+                    ? a.chapter_number - b.chapter_number
+                    : b.chapter_number - a.chapter_number
+                )
                 .map((chapter) => (
                   <motion.div
                     key={chapter.id}
@@ -334,11 +352,11 @@ export default function NovelDetailPage() {
                         <BookText className="w-4 h-4" />
                         {chapter.word_count} words
                       </div>
-                      <BookmarkButton
+                      {/* <BookmarkButton
                         novelId={novel.id}
                         chapterId={chapter.id}
                         chapterTitle={chapter.title}
-                      />
+                      /> */}
                     </div>
                   </motion.div>
                 ))}

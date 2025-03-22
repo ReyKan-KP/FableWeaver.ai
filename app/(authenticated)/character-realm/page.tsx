@@ -349,7 +349,7 @@ export default function CharactersPage() {
                   From: {character.content_source}
                 </span>
                 <motion.a
-                  href={`/chatbot/${character.id}`}
+                  href={`/chatbot/${character.name.toLowerCase().replace(/\s+/g, '-')}`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-4 py-2 bg-gradient-to-r from-violet-500 via-blue-500 to-teal-500 text-white 

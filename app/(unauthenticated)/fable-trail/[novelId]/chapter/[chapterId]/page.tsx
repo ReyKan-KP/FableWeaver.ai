@@ -180,13 +180,16 @@ export default function ChapterPage() {
   const navigateChapter = async (direction: "prev" | "next") => {
     if (!chapter || !novel || !session?.user) return;
 
-    const currentIndex = novel.chapters.findIndex((ch) => ch.id === chapter.id);
-    const nextIndex =
-      direction === "next" ? currentIndex + 1 : currentIndex - 1;
+    const currentChapterNumber = chapter.chapter_number;
+    const nextChapterNumber = direction === "next" 
+      ? currentChapterNumber + 1 
+      : currentChapterNumber - 1;
 
-    if (nextIndex >= 0 && nextIndex < novel.chapters.length) {
-      const nextChapter = novel.chapters[nextIndex];
+    const nextChapter = novel.chapters
+      .filter(ch => ch.is_published)
+      .find(ch => ch.chapter_number === nextChapterNumber);
 
+    if (nextChapter) {
       // Update reading status and progress before navigation
       await Promise.all([
         updateReadingStatus(novel.id, nextChapter.id),
@@ -305,20 +308,19 @@ export default function ChapterPage() {
             <button
               onClick={() => navigateChapter("prev")}
               disabled={
-                novel.chapters[0]?.chapter_number === chapter.chapter_number
+                Math.min(...novel.chapters.filter(ch => ch.is_published).map(ch => ch.chapter_number)) === chapter.chapter_number
               }
               className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <span className="text-gray-600 dark:text-gray-300">
+            <span className="text-gray-500 dark:text-gray-400">
               Chapter {chapter.chapter_number}
             </span>
             <button
               onClick={() => navigateChapter("next")}
               disabled={
-                novel.chapters[novel.chapters.length - 1]?.chapter_number ===
-                chapter.chapter_number
+                Math.max(...novel.chapters.filter(ch => ch.is_published).map(ch => ch.chapter_number)) === chapter.chapter_number
               }
               className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
@@ -391,11 +393,11 @@ export default function ChapterPage() {
                 <BookText className="w-4 h-4" />
                 {chapter.word_count} words
               </div>
-              <BookmarkButton
+              {/* <BookmarkButton
                 novelId={novel.id}
                 chapterId={chapter.id}
                 chapterTitle={chapter.title}
-              />
+              /> */}
             </div>
             <div className="whitespace-pre-wrap leading-relaxed">
               {chapter.content}

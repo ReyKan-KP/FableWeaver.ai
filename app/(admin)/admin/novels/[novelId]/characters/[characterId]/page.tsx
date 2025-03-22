@@ -252,7 +252,7 @@ export default async function CharacterDetailPage({
                     </svg>
                     <h3 className="text-lg font-medium">No progression entries yet</h3>
                     <p className="text-muted-foreground mt-2 mb-4">
-                      Track how this character evolves throughout the novel's chapters
+                      Track how this character evolves throughout the novel&apos;s chapters
                     </p>
                     <Button asChild>
                       <Link href={`/admin/novels/${params.novelId}/characters/${params.characterId}/progression/new`}>
