@@ -17,6 +17,7 @@ export async function GET(request: Request) {
             .select("*")
             .eq("is_public", true)
             .eq("is_published", true)
+            .eq("status", "approved")
             .order("updated_at", { ascending: false });
 
         if (error) {

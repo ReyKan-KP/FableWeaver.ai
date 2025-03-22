@@ -40,7 +40,7 @@ export function StatsCard({
       onClick={handleCardClick}
       className="cursor-pointer"
     >
-      <Card className="overflow-hidden relative">
+      <Card className="overflow-hidden relative h-[15vh]">
         <motion.div
           className="absolute inset-0 opacity-10"
           style={{ backgroundColor: color }}

@@ -5,7 +5,7 @@ import { getToken } from "next-auth/jwt"
 
 export default withAuth({
     pages: {
-        signIn: "/login",
+        signIn: "/sign-in",
     },
 })
 

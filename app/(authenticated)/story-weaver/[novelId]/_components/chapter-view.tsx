@@ -151,13 +151,31 @@ export default function ChapterView({
                     ) : (
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     )}
+                    
+                    <div className="flex items-center gap-2 ml-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        chapter.is_published 
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" 
+                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
+                      }`}>
+                        {chapter.is_published ? "Published" : "Draft"}
+                      </span>
+                      
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        chapter.is_public 
+                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" 
+                          : "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100"
+                      }`}>
+                        {chapter.is_public ? "Public" : "Private"}
+                      </span>
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {chapter.summary}
                   </p>
                   <div className="flex items-center gap-4 mt-2">
-                    {/* <div
-                      className="flex items-center gap-2"
+                    <div
+                      className="flex items-center gap-2 group relative"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <label className="text-sm text-muted-foreground">
@@ -175,27 +193,26 @@ export default function ChapterView({
                             if (error) throw error;
 
                             onChapterUpdate();
-                            toast({
-                              title: "Success",
-                              description: `Chapter is now ${checked ? "public" : "private"}`,
+                            toast("Visibility Updated", {
+                              description: `Chapter is now ${checked ? "public" : "private"}`
                             });
                           } catch (error) {
                             console.error(
                               "Error updating chapter visibility:",
                               error
                             );
-                            toast({
-                              title: "Error",
-                              description:
-                                "Failed to update chapter visibility",
-                              variant: "destructive",
+                            toast.error("Update Failed", {
+                              description: "Failed to update chapter visibility"
                             });
                           }
                         }}
                       />
-                    </div> */}
+                      <div className="absolute invisible group-hover:visible bg-zinc-800 text-white text-xs rounded p-2 mt-18 w-48 z-10 top-10">
+                        Controls whether this chapter is visible to the public or only to collaborators
+                      </div>
+                    </div>
                     <div
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 group relative"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <label className="text-sm text-muted-foreground">
@@ -205,6 +222,9 @@ export default function ChapterView({
                         checked={chapter.is_published}
                         onCheckedChange={() => handlePublishChapter(chapter)}
                       />
+                      <div className="absolute invisible group-hover:visible bg-zinc-800 text-white text-xs rounded p-2 mt-18 w-48 z-10 top-10">
+                        Controls whether this chapter is considered finalized and ready for readers
+                      </div>
                     </div>
                   </div>
                 </div>

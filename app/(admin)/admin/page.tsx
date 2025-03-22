@@ -535,14 +535,14 @@ export default function AdminDashboard() {
           color={CHART_COLORS.orange}
           icon={Activity}
         />
-        <StatsCard
+        {/* <StatsCard
           title="Daily Active Users"
           value={stats.dailyActiveUsers}
           trend={stats.monthlyGrowth.users > 0 ? "up" : "down"}
           trendValue={`${Math.abs(stats.monthlyGrowth.users).toFixed(1)}%`}
           color={CHART_COLORS.purple}
           icon={Users}
-        />
+        /> */}
       </div>
 
       {/* New stats row for Thread Tapestry, Lore Lens, and Tale Tethers */}

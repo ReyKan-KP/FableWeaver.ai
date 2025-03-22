@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { createClient as createServerClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 
 // Browser client - for client-side operations
 export const createBrowserSupabaseClient = () =>
@@ -10,7 +10,7 @@ export const createBrowserSupabaseClient = () =>
 
 // Server client - for server-side operations with full access
 export const createServerSupabaseClient = () =>
-    createServerClient(
+    createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
         {
@@ -22,12 +22,12 @@ export const createServerSupabaseClient = () =>
     )
 
 // Helper function to update last_seen
-// export const updateLastSeen = async (userId: string) => {
-//     const supabase = createServerSupabaseClient()
+export const updateLastSeen = async (userId: string) => {
+    const supabase = createServerSupabaseClient()
 
-//     await supabase
-//         .from('user')
-//         .update({ last_seen: new Date().toISOString() })
-//         .eq('user_id', userId)
-// }
+    await supabase
+        .from('user')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('user_id', userId)
+}
 

@@ -74,6 +74,7 @@ interface Novel {
   last_chapter_at: string;
   metadata: any;
   is_public: boolean;
+  status: string;
 }
 
 interface Chapter {
@@ -199,6 +200,9 @@ export default function NovelView() {
     personality: '',
     physical_description: ''
   });
+  const [publishFilter, setPublishFilter] = useState<"all" | "published" | "draft">("all");
+  const [showPublishConfirmDialog, setShowPublishConfirmDialog] = useState(false);
+  const [isPublishingNovel, setIsPublishingNovel] = useState(false);
 
   const loadChapterRevisions = async (chapterId: string) => {
     try {
@@ -439,6 +443,15 @@ export default function NovelView() {
       );
     }
 
+    // Apply publish status filter
+    if (publishFilter !== "all") {
+      filtered = filtered.filter(
+        (chapter) => 
+          (publishFilter === "published" && chapter.is_published) || 
+          (publishFilter === "draft" && !chapter.is_published)
+      );
+    }
+
     // Apply sorting
     filtered.sort((a, b) => {
       if (sortField === "chapter_number") {
@@ -467,7 +480,7 @@ export default function NovelView() {
   useEffect(() => {
     const filtered = sortAndFilterChapters();
     setFilteredChapters(filtered);
-  }, [searchQuery, chapters, sortDirection, sortField]);
+  }, [searchQuery, chapters, sortDirection, sortField, publishFilter]);
 
   // Calculate pagination values
   const totalChapters = filteredChapters.length;
@@ -534,6 +547,89 @@ export default function NovelView() {
       console.error('Error deleting character:', error);
       toast.error('Failed to delete character', {
         description: 'Failed to delete character',
+      });
+    }
+  };
+
+  const handlePublishNovel = async () => {
+    if (!novel) return;
+    
+    setIsPublishingNovel(true);
+    try {
+      const { error } = await supabase
+        .from("novels")
+        .update({ 
+          is_published: true,
+          status: "pending" 
+        })
+        .eq("id", novel.id);
+
+      if (error) throw error;
+
+      setNovel((prev) =>
+        prev
+          ? { 
+              ...prev, 
+              is_published: true,
+              status: "pending"
+            }
+          : null
+      );
+      
+      toast.success("Novel submitted for review", {
+        description: "Your novel has been submitted for admin review and will be published once approved.",
+      });
+    } catch (error) {
+      console.error(
+        "Error updating novel publish status:",
+        error
+      );
+      toast.error("Failed to update novel publish status", {
+        description: "Failed to update novel publish status",
+      });
+    } finally {
+      setIsPublishingNovel(false);
+      setShowPublishConfirmDialog(false);
+    }
+  };
+
+  const handleUnpublishNovel = async () => {
+    if (!novel) return;
+    
+    try {
+      // Determine the status - if already approved, keep it as approved
+      const newStatus = novel.status === "approved" ? "approved" : "draft";
+      
+      const { error } = await supabase
+        .from("novels")
+        .update({ 
+          is_published: false,
+          status: newStatus
+        })
+        .eq("id", novel.id);
+
+      if (error) throw error;
+
+      setNovel((prev) =>
+        prev
+          ? { 
+              ...prev, 
+              is_published: false,
+              status: newStatus
+            }
+          : null
+      );
+      
+      toast.success("Novel unpublished", {
+        description: "Your novel is now unpublished. You can publish it again anytime.",
+      });
+    } catch (error) {
+      console.error(
+        "Error updating novel publish status:",
+        error
+      );
+      toast.error("Failed to update novel publish status", {
+        description: "Failed to update novel publish status",
       });
     }
   };
@@ -617,6 +713,15 @@ export default function NovelView() {
                       <span>•</span>
                       <span>{novel.total_words} words</span>
                       <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <span className="px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 rounded-full text-xs">
+                          {chapters.filter(ch => ch.is_published).length} published
+                        </span>
+                        <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 rounded-full text-xs">
+                          {chapters.filter(ch => !ch.is_published).length} draft
+                        </span>
+                      </span>
+                      <span>•</span>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                           <label className="text-sm">Public:</label>
@@ -647,7 +752,7 @@ export default function NovelView() {
                                 });
                               }
                             }}
-                            disabled={!novel.is_public}
+                            disabled={!novel.is_published}
                           />
                           {novel.is_published && !novel.is_public && (
                             <span className="text-xs text-yellow-600 dark:text-yellow-500 ml-2">
@@ -660,33 +765,81 @@ export default function NovelView() {
                           <Switch
                             checked={novel.is_published}
                             onCheckedChange={async (checked) => {
-                              try {
-                                const { error } = await supabase
-                                  .from("novels")
-                                  .update({ is_published: checked })
-                                  .eq("id", novel.id);
-
-                                if (error) throw error;
-
-                                setNovel((prev) =>
-                                  prev
-                                    ? { ...prev, is_published: checked }
-                                    : null
-                                );
-                                toast.success(`Novel is now ${checked ? "published" : "unpublished"}`, {
-                                  description: `Novel is now ${checked ? "published" : "unpublished"}`,
-                                });
-                              } catch (error) {
-                                console.error(
-                                  "Error updating novel publish status:",
-                                  error
-                                );
-                                toast.error("Failed to update novel publish status", {
-                                  description: "Failed to update novel publish status",
-                                });
+                              if (checked) {
+                                if (novel.status === "approved") {
+                                  // If already approved, allow direct publishing without confirmation
+                                  try {
+                                    const { error } = await supabase
+                                      .from("novels")
+                                      .update({ is_published: true })
+                                      .eq("id", novel.id);
+                                    
+                                    if (error) throw error;
+                                    
+                                    setNovel((prev) => 
+                                      prev ? { ...prev, is_published: true } : null
+                                    );
+                                    
+                                    toast.success("Novel published", {
+                                      description: "Your novel is now published and available to readers.",
+                                    });
+                                  } catch (error) {
+                                    console.error("Error publishing novel:", error);
+                                    toast.error("Failed to publish novel", {
+                                      description: "Failed to update novel publish status",
+                                    });
+                                  }
+                                } else {
+                                  // For non-approved novels, show confirmation dialog
+                                  setShowPublishConfirmDialog(true);
+                                }
+                              } else {
+                                handleUnpublishNovel();
                               }
                             }}
                           />
+                          <div className="ml-2">
+                            {novel.status === "pending" && (
+                              <div className="group relative">
+                                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 rounded-md text-xs font-medium">
+                                  Pending Review
+                                </span>
+                                <div className="absolute invisible group-hover:visible bg-black/80 text-white text-xs rounded px-2 py-1 left-0 mt-1 w-48 z-10">
+                                  Your novel is awaiting admin review before it can be made public.
+                                </div>
+                              </div>
+                            )}
+                            {novel.status === "approved" && (
+                              <div className="group relative">
+                                <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 rounded-md text-xs font-medium">
+                                  Approved
+                                </span>
+                                <div className="absolute invisible group-hover:visible bg-black/80 text-white text-xs rounded px-2 py-1 left-0 mt-1 w-48 z-10">
+                                  Your novel has been approved and can be published or unpublished at any time.
+                                </div>
+                              </div>
+                            )}
+                            {novel.status === "rejected" && (
+                              <div className="group relative">
+                                <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 rounded-md text-xs font-medium">
+                                  Rejected
+                                </span>
+                                <div className="absolute invisible group-hover:visible bg-black/80 text-white text-xs rounded px-2 py-1 left-0 mt-1 w-48 z-10">
+                                  Your novel was not approved. Make changes and resubmit for review.
+                                </div>
+                              </div>
+                            )}
+                            {novel.status === "draft" && (
+                              <div className="group relative">
+                                <span className="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100 rounded-md text-xs font-medium">
+                                  Draft
+                                </span>
+                                <div className="absolute invisible group-hover:visible bg-black/80 text-white text-xs rounded px-2 py-1 left-0 mt-1 w-48 z-10">
+                                  Your novel is in draft state. Publish it to submit for review.
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -743,6 +896,88 @@ export default function NovelView() {
           </div>
         </div>
       </motion.div>
+
+      {/* Status Notifications */}
+      {novel && novel.status === "pending" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="container mx-auto mt-4"
+        >
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Info className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
+                  Your novel is pending admin review
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-500">
+                  <p>
+                    Your novel has been submitted for review. Once approved, it will be publicly available in the library.
+                    This process typically takes 1-2 business days. You can continue to edit your novel during this time.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {novel && novel.status === "rejected" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="container mx-auto mt-4"
+        >
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Info className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800 dark:text-red-400">
+                  Your novel was not approved
+                </h3>
+                <div className="mt-2 text-sm text-red-700 dark:text-red-500">
+                  <p>
+                    Your novel was reviewed but not approved for publishing. Please check your email for details on why it was rejected.
+                    You can make the necessary changes and resubmit it for review.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {novel && novel.status === "approved" && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="container mx-auto mt-4"
+        >
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Info className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800 dark:text-green-400">
+                  Your novel has been approved!
+                </h3>
+                <div className="mt-2 text-sm text-green-700 dark:text-green-500">
+                  <p>
+                    Congratulations! Your novel has been approved by our admins. You can now freely publish or unpublish it at any time 
+                    without requiring additional review. Toggle the "Published" switch to control its visibility.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Main Content */}
       <div className="container mx-auto py-8">
@@ -828,6 +1063,41 @@ export default function NovelView() {
                           Your Story Chapters
                         </h2>
                         <div className="flex items-center gap-2">
+                          <div className="flex items-center rounded-md border border-input bg-background p-1 mr-2">
+                            <Button
+                              variant={publishFilter === "all" ? "default" : "ghost"}
+                              size="sm"
+                              onClick={() => setPublishFilter("all")}
+                              className="text-xs flex items-center gap-1"
+                            >
+                              All
+                              <span className="ml-1 px-1.5 py-0.5 bg-primary/20 rounded-full text-[10px]">
+                                {chapters.length}
+                              </span>
+                            </Button>
+                            <Button
+                              variant={publishFilter === "published" ? "default" : "ghost"}
+                              size="sm"
+                              onClick={() => setPublishFilter("published")}
+                              className="text-xs flex items-center gap-1"
+                            >
+                              Published
+                              <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 rounded-full text-[10px]">
+                                {chapters.filter(ch => ch.is_published).length}
+                              </span>
+                            </Button>
+                            <Button
+                              variant={publishFilter === "draft" ? "default" : "ghost"}
+                              size="sm"
+                              onClick={() => setPublishFilter("draft")}
+                              className="text-xs flex items-center gap-1"
+                            >
+                              Draft
+                              <span className="ml-1 px-1.5 py-0.5 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100 rounded-full text-[10px]">
+                                {chapters.filter(ch => !ch.is_published).length}
+                              </span>
+                            </Button>
+                          </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:bg-primary/10">
@@ -1805,6 +2075,44 @@ export default function NovelView() {
               Got it, thanks!
             </Button>
           </motion.div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Publish Confirmation Dialog */}
+      <Dialog open={showPublishConfirmDialog} onOpenChange={setShowPublishConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Publish Novel</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-3">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-400 flex items-center">
+                <Info className="h-4 w-4 mr-2" />
+                Admin Review Required
+              </h3>
+              <p className="mt-2 text-sm text-yellow-700 dark:text-yellow-500">
+                Publishing this novel will submit it for admin review. The status will be set to 'pending' until approved.
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Once approved, your novel will be publicly available in the library. You can unpublish at any time.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowPublishConfirmDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePublishNovel} disabled={isPublishingNovel} className="bg-gradient-to-r from-violet-500 to-blue-500 text-white">
+              {isPublishingNovel ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit for Review"
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </motion.div>
