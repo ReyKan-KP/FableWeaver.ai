@@ -495,27 +495,9 @@ export function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48 sm:w-56" align="end">
                 <DropdownMenuItem asChild>
-                  <Link
-                    href={
-                      session?.user?.role === "admin" ? "/admin" : "/profile"
-                    }
-                    className="flex items-center"
-                  >
+                  <Link href="/profile" className="flex items-center">
                     <User className="mr-2 h-4 w-4" />
-                    {session?.user?.role === "admin"
-                      ? "Admin Dashboard"
-                      : "Profile"}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link
-                    href={
-                      "/tale-tethers"
-                    }
-                    className="flex items-center"
-                  >
-                    <Handshake className="mr-2 h-4 w-4" />
-                    Tale Tethers
+                    Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem

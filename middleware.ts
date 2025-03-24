@@ -18,7 +18,7 @@ export const config = {
     matcher: [
         "/weave-anime/:path*",
         "/profile/:path*",
-        "/admin/:path*",
+        // "/admin/:path*",
         "/chatbot/:path*",
     ]
 }
