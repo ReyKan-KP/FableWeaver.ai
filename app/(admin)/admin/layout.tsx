@@ -13,10 +13,10 @@ export default function AdminLayout({
   const router = useRouter();
 
   // Check if user is authenticated and has admin role
-  if (status === "unauthenticated") {
+  // if (status === "unauthenticated") {
     router.push("/sign-in");
-    return null;
-  }
+  //   return null;
+  // }
 
   if (status === "loading") {
     return null;
