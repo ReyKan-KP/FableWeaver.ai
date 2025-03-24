@@ -16,16 +16,61 @@ declare module "next-auth" {
   }
 
   interface User {
+    id: string
     role?: string
+    email?: string | null
+    name?: string | null
+    image?: string | null
+    avatar_url?: string | null
   }
 }
 
 export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/sign-in',
+    error: '/auth/error',
+    signOut: '/sign-out',
   },
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' 
+          ? process.env.NEXT_PUBLIC_SITE_URL 
+          : 'localhost'
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' 
+          ? process.env.NEXT_PUBLIC_SITE_URL 
+          : 'localhost'
+      }
+    },
+    csrfToken: {
+      name: 'next-auth.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' 
+          ? process.env.NEXT_PUBLIC_SITE_URL 
+          : 'localhost'
+      }
+    }
   },
   providers: [
     GoogleProvider({
@@ -51,7 +96,7 @@ export const authOptions: NextAuthOptions = {
             }
           })
 
-          if (authError) throw authError
+            if (authError) throw authError
 
           const { error: dbError } = await supabase
             .from('user')
@@ -66,7 +111,7 @@ export const authOptions: NextAuthOptions = {
               }
             ])
 
-          if (dbError) throw dbError
+            if (dbError) throw dbError
 
           return {
             id: user?.id,
@@ -96,46 +141,66 @@ export const authOptions: NextAuthOptions = {
         isAdmin: { label: "Is Admin", type: "boolean" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Invalid credentials')
-        }
-
-        if (
-          credentials.email === process.env.NEXT_PUBLIC_FABLEWEAVER_ADMIN_EMAIL &&
-          credentials.password === process.env.NEXT_PUBLIC_FABLEWEAVER_ADMIN_PASSWORD
-        ) {
-          return {
-            id: 'admin',
-            email: credentials.email,
-            name: 'Admin',
-            role: 'admin'
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error('Email and password are required')
           }
-        }
 
-        const supabase = createServerSupabaseClient()
+          // Admin login check
+          if (
+            credentials.email === process.env.NEXT_PUBLIC_FABLEWEAVER_ADMIN_EMAIL &&
+            credentials.password === process.env.NEXT_PUBLIC_FABLEWEAVER_ADMIN_PASSWORD
+          ) {
+            return {
+              id: 'admin',
+              email: credentials.email,
+              name: 'Admin',
+              role: 'admin'
+            }
+          }
 
-        const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({
-          email: credentials.email,
-          password: credentials.password,
-        })
+          const supabase = createServerSupabaseClient()
 
-        if (authError || !user) {
-          throw new Error(authError?.message || 'Invalid credentials')
-        }
+          // Regular user authentication
+          const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          })
 
-        const { data: userData, error: dbError } = await supabase
-          .from('user')
-          .select()
-          .eq('user_id', user.id)
-          .single()
+          if (authError || !user) {
+            throw new Error(authError?.message || 'Invalid credentials')
+          }
 
-        if (dbError) throw new Error(dbError.message)
+          // Fetch user profile
+          const { data: userData, error: dbError } = await supabase
+            .from('user')
+            .select('*')
+            .eq('user_id', user.id)
+            .single()
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: userData?.user_name,
-          role: userData?.role || 'user'
+          if (dbError) throw new Error(dbError.message)
+
+          if (!userData) {
+            throw new Error('User profile not found')
+          }
+
+          // Update last seen
+          await supabase
+            .from('user')
+            .update({ last_seen: new Date().toISOString() })
+            .eq('user_id', user.id)
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: userData.user_name,
+            image: userData.avatar_url,
+            avatar_url: userData.avatar_url,
+            role: userData.role || 'user'
+          }
+        } catch (error) {
+          console.error('Error in credentials authorize:', error)
+          throw error
         }
       }
     })
@@ -150,8 +215,9 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.name = user.name
-        token.picture = user.image
+        token.picture = user.image || user.avatar_url
         token.role = user.role
+        token.email = user.email
       }
       return token
     },
@@ -159,10 +225,17 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.name = token.name as string
+        session.user.email = token.email as string
         session.user.image = token.picture as string
         session.user.role = token.role as string
       }
       return session
+    },
+    async signIn({ user, account, profile }) {
+      if (!user?.email) {
+        return false
+      }
+      return true
     }
   }
 }

@@ -49,6 +49,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { NotificationPanel } from "./notification-panel";
+// import LastSeenUpdater from "@/components/providers/last-seen-updater";
+import { updateLastSeen } from "@/lib/supabase";
 
 const navItems = [
   {
@@ -155,6 +157,17 @@ export function Navbar() {
   const [activeTab, setActiveTab] = useState<string>("Home");
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const user = session?.user;
+  const [lastSeen, setLastSeen] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      updateLastSeen(user.id);
+      setLastSeen(new Date().toISOString());
+      console.log("Last seen updated for user:", user.id, "at", lastSeen);
+    }
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut({ redirect: true });
