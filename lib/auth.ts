@@ -35,9 +35,10 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  secret: process.env.NEXTAUTH_SECRET,
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token`,
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
@@ -49,7 +50,7 @@ export const authOptions: NextAuthOptions = {
       }
     },
     callbackUrl: {
-      name: `next-auth.callback-url`,
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.callback-url`,
       options: {
         sameSite: 'lax',
         path: '/',
@@ -60,7 +61,7 @@ export const authOptions: NextAuthOptions = {
       }
     },
     csrfToken: {
-      name: 'next-auth.csrf-token',
+      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.csrf-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
