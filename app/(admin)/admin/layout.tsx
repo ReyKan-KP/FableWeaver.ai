@@ -22,10 +22,10 @@ export default function AdminLayout({
     return null;
   }
 
-  if (session?.user?.role !== "admin") {
-    router.push("/");
-    return null;
-  }
+  // if (session?.user?.role !== "admin") {
+  //   router.push("/");
+  //   return null;
+  // }
 
   return (
     <div className="flex h-screen">
