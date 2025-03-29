@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 import type { GroupChatMessage, Character } from "@/types/chat";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { model_group_chat } from "@/lib/ai-setting";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
@@ -34,7 +35,7 @@ async function generateCharacterResponse(
     isAutoChatting: boolean = false
 ): Promise<GroupChatMessage> {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: model_group_chat });
         const prompt = `
 Comprehensive Character Interaction Prompt:
 

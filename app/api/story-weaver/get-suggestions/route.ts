@@ -3,9 +3,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { model_story_weaver } from "@/lib/ai-setting";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
+const model = genAI.getGenerativeModel({ model: model_story_weaver });
 
 export const maxDuration = 60; // Set maximum duration to 300 seconds (5 minutes)
 // export const dynamic = 'force-dynamic';

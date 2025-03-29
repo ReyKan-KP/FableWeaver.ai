@@ -6,10 +6,11 @@ import {
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { model_story_weaver } from "@/lib/ai-setting";
 
 // Initialize Google AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
+const model = genAI.getGenerativeModel({ model: model_story_weaver });
 
 const MAX_RETRIES = 3;
 const INITIAL_DELAY = 1000; // 1 second
@@ -472,7 +473,7 @@ After completing the JSON object, write ###END###`;
         // Ensure metadata fields are properly structured
         const chapterMetadata = {
             generated_from_prompt: prompt,
-            ai_model: "gemini-2.0-flash-thinking-exp-01-21",
+            ai_model: model_story_weaver,
             generation_attempts: 1,
             plot_points: Array.isArray(chapterData.plotPoints) ? chapterData.plotPoints : [],
             character_arcs: Array.isArray(chapterData.characterArcs) ? chapterData.characterArcs : [],

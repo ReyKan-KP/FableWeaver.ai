@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import type { Message, Character } from "@/types/chat"
+import { model_chat } from "@/lib/ai-setting"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!)
@@ -129,7 +130,7 @@ export async function POST(request: Request) {
 
     // Generate AI response
     // console.log(fullPrompt)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+    const model = genAI.getGenerativeModel({ model: model_chat })
     const result = await model.generateContent([{ text: fullPrompt }])
 
     const aiResponse = result.response

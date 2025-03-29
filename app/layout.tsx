@@ -11,6 +11,7 @@ import { AnimatedGradient } from "@/components/ui/animated-gradient";
 import type { Metadata } from "next";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
 import LastSeenUpdater from "@/components/providers/last-seen-updater";
+import ChatbotWidget from "@/components/chatbot/chatbot-widget";
 const inter = Inter({ subsets: ["latin"] });
 
 
@@ -46,6 +47,7 @@ export default async function RootLayout({
               <Toaster2 />
               {children}
             </main>
+            <ChatbotWidget />
             <footer className="mt-auto">
               <Footer />
             </footer>

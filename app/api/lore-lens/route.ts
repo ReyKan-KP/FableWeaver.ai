@@ -6,6 +6,7 @@ import { RecommendationAgent } from '@/app/(authenticated)/lore-lens/_agents/rec
 import type { SearchResult, AgentContext, ContentItem } from '@/app/(authenticated)/lore-lens/_agents/types';
 import { v4 as uuidv4 } from 'uuid';
 import { ImageSearchAgent } from '@/app/(authenticated)/lore-lens/_agents/image-search-agent';
+import { model_lore_lens } from '@/lib/ai-setting';
 
 const supabase = createServerSupabaseClient();
 
@@ -28,8 +29,8 @@ const searchSchema = z.object({
   userId: z.string().optional(),
 });
 
-// Use the specified Gemini model
-const MODEL_NAME = "gemini-2.0-flash";
+// Use the specified Gemini model from ai-settings
+const MODEL_NAME = model_lore_lens;
 
 export async function POST(req: Request) {
   try {
